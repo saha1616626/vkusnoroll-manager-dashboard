@@ -7,9 +7,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 
 // Импорт стилей
-
+import "./../../styles/blocks/header.css";
 
 // Импорт иконок
+import userIcon from './../../assets/icons/user.png';
 
 const Header = () => {
 
@@ -107,7 +108,42 @@ const Header = () => {
 
     return (
         <div>
-            Шапка 11111111111111111111111111111111
+            <header className="header-container">
+                <div
+                    className="header-logo"
+                    onClick={handleLogoClick}
+                >
+                    ВкусноРолл.Менеджер
+                </div>
+
+                <nav style={{ display: 'flex', gap: '10px', justifyContent: 'center', margin: '0', padding: '0' }}>
+                    {['Заказы', 'Центр сообщений'].map((label, index) => (
+                        <button
+                            className="header-nav-button"
+                            key={index}
+                            onClick={() => handleMenuButton(index)}
+                            style={{
+                                backgroundColor: selectedButton === index ? 'gray' : 'transparent',
+                                color: selectedButton === index ? 'white' : 'black'
+                            }}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </nav>
+
+                <div className="header-icons">
+                    <div className="header-user-details">
+                        <span className="header-user-name">{userData.name}</span>
+                        <span className="header-user-role">{userData.role}</span>
+                    </div>
+                    <img
+                        src={userIcon}
+                        alt="User"
+                        onClick={handleUserClick}
+                    />
+                </div>
+            </header>
         </div>
     );
 }

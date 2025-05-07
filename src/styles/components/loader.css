@@ -1,0 +1,40 @@
+/* Стиль для анимации загрузки данных */
+
+/* Блокировка скролла */
+body.no-scroll {
+    overflow: hidden;
+}
+
+.loader-loading {
+    justify-content: center;
+    align-content: center;
+    margin-top: 100px;
+}
+
+/* Контейнер с иконкой */
+.loader-loading {
+    background-color: transparent;
+    border: none;
+    display: flex;             /* Для центрации иконки */
+    align-items: center;       /* Вертикальное выравнивание по центру */
+    justify-content: center;    /* Горизонтальное выравнивание по центру */
+
+    cursor: pointer;           /* Курсор при наведении */
+    transition: transform 0.2s ease; /* Плавность трансформации */
+}
+.loader-loading.rotate { /* Активация вращения */
+    animation: loading-spin 20s linear infinite; /* Одинаковая скорость и бесконечная анимация */
+}
+@keyframes loading-spin {
+    from {
+        transform: rotate(0deg); /* Начало вращения */
+    }
+    to {
+        transform: rotate(7200deg); /* Конечное вращение */
+    }
+}
+
+/* Иконка */
+.loader-loadingIcon {
+    width: 40px;
+}

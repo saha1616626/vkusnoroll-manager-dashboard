@@ -37,8 +37,13 @@ api.interceptors.response.use(
 const apiMethods = {
 
     // Авторизация, выход и восстановлении пароля
-    login: (credentials) => api.post('/auth/manager/login', credentials, { withCredentials: true}), // Вход
-    logout: () => api.post('/auth/manager/logout'), // Выход
+    login: (credentials) => api.post('/auth/manager/login', credentials, { withCredentials: true }), // Вход
+    logout: () => api.post('/auth/manager/logout', { withCredentials: true }), // Выход
+
+    // Учетные записи
+    getAccountById: (id) => api.get(`/accounts/user/${id}`), // Пользователь
+
+
 
 };
 

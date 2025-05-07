@@ -21,6 +21,7 @@ import LoginPage from './components/pages/auth/LoginPage'; // Страница �
 import HeaderLayout from './components/layouts/HeaderLayout'; // Header и весь дочерний контент
 import OrdersPage from './components/pages/OrdersPage'; // Страница для управления заказами пользователей
 import MessageCenterPage from './components/pages/MessageCenterPage'; // Страница "Центр сообщений"
+import PersonalAccount from './components/pages/PersonalAccount'; // Страница "Личный кабинет"
 
 // Импорт стилей
 import './styles/global/global.css'; // Глобальные стили
@@ -83,6 +84,7 @@ const AppContent = () => {
           <Route path="/" element={<HeaderLayout />}>
             <Route path='/orders' element={<OrdersPage />} />
             <Route path='/message-center' element={<MessageCenterPage />} />
+            <Route path='/personal-account' element={<PersonalAccount />} />
           </Route>
         </Route>
       </Routes>

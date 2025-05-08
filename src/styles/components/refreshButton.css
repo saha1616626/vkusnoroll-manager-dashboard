@@ -1,0 +1,31 @@
+/* Иконка обновления страницы*/
+.refresh-button-reboot {
+    width: 30px;
+    height: 30px;
+}
+
+/* Кнопка обновления данных */
+.refresh-button-reboot {
+    background-color: transparent;
+    border: none;
+    display: flex;             /* Для центрации иконки */
+    align-items: center;       /* Вертикальное выравнивание по центру */
+    justify-content: center;    /* Горизонтальное выравнивание по центру */
+
+    cursor: pointer;           /* Курсор при наведении */
+    transition: transform 0.2s ease; /* Плавность трансформации */
+}
+.refresh-button-reboot:focus {
+    outline: none; /* Убирает обводку при фокусе */
+}
+.refresh-button-reboot.rotate {
+    animation: spin 0.5s forwards; /* Применяет анимацию при нажатии */
+}
+@keyframes spin {
+    from {
+        transform: rotate(0deg); /* Начало вращения */
+    }
+    to {
+        transform: rotate(360deg); /* Конечное вращение */
+    }
+}

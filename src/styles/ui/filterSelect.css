@@ -1,0 +1,57 @@
+/* Поле для выбора значения из списка */
+
+/* Контейнер выпадающего меню */
+.filter-select {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Контейнер выпадающего списка */
+.filter-select-dropdown-container {
+    position: absolute;
+    background-color: white;
+    /* Цвет заднего фона */
+    border: 1px solid #ccc;
+    /* Цвет рамки */
+    border-radius: 5px;
+    /* С округленными углами */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    /* Тень для меню */
+    z-index: 1;
+    /* Размещение поверх других элементов */
+    margin-top: 45px;
+    max-height: 200px;
+    overflow-y: auto;
+    /* Скролл */
+    width: 197.46px;
+}
+
+/* Выпадающее меню - список невыбранных объектов */
+.filter-select-dropdown {
+    position: relative;
+    border-end-start-radius: 5px;
+    border-end-end-radius: 5px;
+}
+
+/* Элементы выпадающего меню - невыбранные объекты */
+.filter-select-dropdown-item {
+    padding: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.filter-select-dropdown-item:hover {
+    background-color: #f0f0f0;
+    /* Цвет при наведении */
+}
+/* Выбранный элемент */
+.filter-select-dropdown-item.selected {
+    background-color: #e0e0e0;
+    font-weight: 500;
+}
+
+/* Пустой элемент списка */
+.filter-select-empty-option {
+    color: #666;
+    font-style: italic;
+}

@@ -1,0 +1,44 @@
+/* Поле поиска */
+
+.search-container {
+    display: flex; /* flexbox для выравнивания */
+    position: relative;
+    justify-content: center; /* Центрируем по горизонтали */
+    align-items: center; /* Центрируем по вертикали */ 
+}
+
+/* Поле поиска */
+.search-input {
+    width: 270px;
+    padding: 5px 20px;
+    padding-right: 30px;
+    border: 1px solid black; /* Цвет рамки */
+    border-radius: 5px; /* Радиус скругления углов */
+    font-size: 16px; /* Размер шрифта */
+    outline: none; /* Убираем стандартный контур при фокусе */
+    transition: box-shadow 0.3s, border-color 0.3s; /* Плавный переход для эффектов */
+}
+.search-input::placeholder {
+    color: #aaa; /* Цвет текста подсказки */
+    opacity: 1; /* Полная видимость текста подсказки */
+}
+.search-input:focus {
+    border-color: rgb(107, 116, 107); /* Цвет рамки при фокусе */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Эффект тени при фокусе */
+}
+
+/* Крестик для сброса значения */
+.search-input-clear-button {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    position: absolute;
+    right: 10px;
+    padding-bottom: 4px;
+}
+.search-input-clear-button:hover {
+    color: #f00; /* Цвет крестика при наведении */
+}

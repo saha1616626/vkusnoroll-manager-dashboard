@@ -1,0 +1,77 @@
+/* Настройка отображения колонок */
+
+/* Выпадающее меню */
+.dropdown-columns {
+    position: relative;
+    display: inline-block;
+    z-index: 1000;
+}
+
+/* Выпадающий список */
+.dropdown-menu-columns {
+    position: absolute;
+    right: 0;
+    background-color: white; /* Цвет заднего фона */
+    border: 1px solid #ccc; /* Цвет рамки */
+    border-radius: 0px; /* С округленными углами */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Тень для меню */
+    z-index: 1; /* Размещение поверх других элементов */
+    max-height: 250px; /* Максимальная высота меню */
+    overflow-y: auto; /* Прокрутка по вертикали, если элементы не умещаются */
+    width: 250px; /* Ширина меню */
+    margin-top: 15px; /* Отступ меню */
+}
+
+/* Заголовок выпадающего списка */
+.dropdown-header {
+    font-weight: bold;
+    text-align: center;
+    margin: 10px 0px;
+}
+
+/* Кнопка сброса значений по умолчанию */
+.reset-button-columns {
+    display: flex; /* Блок для центрирования */
+    background-color:  transparent;
+    color: black; 
+    font-size: 15px;
+    border: none;
+    padding: 8px 15px; 
+    border-radius: 5px; 
+    cursor: pointer;
+}
+.reset-button-columns:hover {
+    background-color: #f1f1f1;
+}
+
+/* Иконка кнопки сброса */
+.icon-reset-button-columns {
+    margin-right: 10px;
+    width: 21px;
+    height: 21px;
+    object-fit: contain; /* Пропорция формы */
+}
+
+/* Разделительная линия */
+.divider {
+    border: none; /* Убираем стандартный стиль рамки */
+    border-top: 1px solid black; /* Добавляем верхнюю границу */
+    margin: 10px 15px; /* Отступы сверху и снизу */
+}
+
+/* Элемент выпадающего списка */
+.dropdown-option-columns {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px; /* Отступы у опций */
+    cursor: pointer;
+    text-align: left; /* Выровнять текст влево */
+    word-wrap: break-word; /* Перенос слов в опциях */
+    max-width: 200px; /* Максимальная ширина для опции */
+}
+.dropdown-option-columns input {
+    margin-right: 10px; /* Отступ между чекбоксом и текстом */
+}
+.dropdown-option-columns:hover {
+    background-color: #f1f1f1; /* Цвет при наведении на опцию */
+}   

@@ -1,0 +1,35 @@
+/* Основной контейнер */
+.dropdown-button-change {
+    position: relative;
+    display: inline-block;
+    z-index: 1000;
+}
+
+/* Основная кнопка */
+.dropdown-button {}
+
+/* Выпадающее меню */
+.dropdown-button-change-menu {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1;
+    margin-top: 5px;
+    min-width: 160px;
+}
+
+/* Элементы меню */
+.dropdown-button-change-option {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.dropdown-button-change-option:hover {
+    background-color: #f5f5f5;
+}

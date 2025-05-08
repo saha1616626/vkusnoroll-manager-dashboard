@@ -8,6 +8,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 // Импорт стилей
 import "./../../styles/blocks/header.css";
+import "./../../styles/global/page.css" // Родительский стиль
 
 // Импорт иконок
 import userIcon from './../../assets/icons/user.png';

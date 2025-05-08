@@ -44,6 +44,7 @@ const PersonalAccount = () => {
                 const userId = localStorage.getItem('userId'); // Получение id пользователя из локального хранилища
                 const response = await api.getAccountById(userId);
                 setUserData(response.data);
+                if(response?.data?.name) localStorage.setItem('userName', response?.data?.name); // Обновляем имя в шапке
             } catch (error) {
                 console.error('Ошибка загрузки данных:', error);
             } finally {
@@ -90,9 +91,9 @@ const PersonalAccount = () => {
     */
 
     return (
-        <>
+        <div>
             {isLoading ? <Loader isWorking={isLoading} /> :
-                <>
+                <div className="personal-account-container">
                     <div className="personal-account-header">
                         <h1 className="personal-account-title">Личный кабинет</h1>
                         <button
@@ -150,9 +151,9 @@ const PersonalAccount = () => {
                         onCancel={() => setShowConfirmation(false)}
                     />
 
-                </>
+                </div>
             }
-        </>
+        </div>
     );
 
 };

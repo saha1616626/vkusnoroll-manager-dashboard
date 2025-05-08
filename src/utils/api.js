@@ -43,7 +43,8 @@ const apiMethods = {
     // Учетные записи
     getAccountById: (id) => api.get(`/accounts/user/${id}`), // Пользователь
 
-
+    // Заказы
+    getOrders: (page, limit) => api.get(`/orders/manager/all?page=${page}&limit=${limit}`), // Получение всех заказов с пагинацией
 
 };
 

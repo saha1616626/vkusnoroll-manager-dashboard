@@ -1,0 +1,11 @@
+/* Стили для кнопки фильтра */
+
+/* Кнопка фильтра */
+.filter-button {
+    transition: background-color 0.3s;
+    height: 33.2px; /* Установка фиксированной высоты кнопки */
+}
+.filter-button.active {
+    background-color: #535353; /* Цвет при активном состоянии */
+}
+

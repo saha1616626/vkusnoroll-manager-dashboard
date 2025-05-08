@@ -1,0 +1,98 @@
+/* Стиль панели разбиения контента на страницы */
+
+/* Контейнер панели */
+.pagination-bar-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 24px;
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+}
+
+/* Информация о разбиении заказов */
+.pagination-bar-counter {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #4a5568;
+    letter-spacing: 0.02em;
+    margin-right: 20px;
+    font-weight: 500;
+}
+
+/* Контейнер кнопок управления */
+.pagination-bar-controls {
+    display: flex;
+    gap: 12px;
+}
+
+/* Кнопки. Общий дизайн. Активны */
+.pagination-bar-button {
+    background: linear-gradient(145deg, #6b46c1, #553c9a);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Эффект наведения */
+.pagination-bar-button:hover:not(:disabled) {
+    background: linear-gradient(145deg, #805ad5, #6b46c1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+/* Эффект активного нажатия */
+.pagination-bar-button:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Все кнопки заблокированы */
+.pagination-bar-button:disabled {
+    background: #e2e8f0;
+    color: #a0aec0;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Иконки стрелок */
+.pagination-bar-button::after {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-size: contain;
+    transition: transform 0.2s;
+}
+
+.pagination-bar-prev::after {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>');
+}
+
+.pagination-bar-next::after {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>');
+}
+
+/* Анимация стрелок при наведении */
+.pagination-bar-button:hover:not(:disabled)::after {
+    transform: translateX(-2px);
+}
+
+.pagination-bar-next:hover:not(:disabled)::after {
+    transform: translateX(2px);
+}

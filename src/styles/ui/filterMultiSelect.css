@@ -1,0 +1,70 @@
+/* Поле для выбора нескольких значений из списка */
+
+/* Контейнер выпадающего меню */
+.multi-select {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Контейнер выпадающего списка */
+.multi-select-element-container {
+    position: absolute;
+    background-color: white; /* Цвет заднего фона */
+    border: 1px solid #ccc; /* Цвет рамки */
+    border-radius: 5px; /* С округленными углами */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Тень для меню */
+    z-index: 1; /* Размещение поверх других элементов */
+    margin-top: 45px;
+    max-height: 200px;
+    overflow-y: auto; /* Скролл */
+    width: 197.46px;
+}
+
+/* Выпадающее меню - список выбранных объектов */
+.selected-values {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    cursor: pointer;
+    margin: 10px 8px;
+    gap: 5px;
+}
+
+/* Элементы выпадающего меню - выбранные объекты */
+.selected-item {
+    background: #e0e0e0;
+    border-radius: 4px;
+    padding: 2px 8px;
+}
+
+/* Кнопка для удаления выбранного объекта */
+.remove-item {
+    margin-left: 5px;
+    font-size: 15px; /* Размер крестика */
+    background: none;
+    border: none;
+    color: red;
+    cursor: pointer;
+}
+
+/* Разделительная линия */
+.multi-select-divider {
+    margin: 10px 8px; /* Отступы сверху и снизу */ 
+}
+
+/* Выпадающее меню - список невыбранных объектов */
+.dropdown-multi-select {
+    position: relative;
+    border-end-start-radius: 5px;
+    border-end-end-radius: 5px;
+}
+
+/* Элементы выпадающего меню - невыбранные объекты */
+.multi-dropdown-item {
+    padding: 8px;
+    cursor: pointer;
+}
+.multi-dropdown-item:hover {
+    background-color: #f0f0f0; /* Цвет при наведении */
+}

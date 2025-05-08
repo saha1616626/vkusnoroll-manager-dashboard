@@ -1,0 +1,88 @@
+/* Меню фильтра */
+
+/* Весь блок фильтра */
+.filter-menu {
+    position: relative; /* Позволяет открыть меню относительно родительского элемента */
+    top: 100%; /* Расположите меню непосредственно под кнопкой */
+    left: 0; /* Начало меню от левой части первой кнопки */
+    width: 100%; /* Занять полную ширину родительского контейнера */
+    background-color: #e7e6e677; /* Подберите нужный цвет фона */
+    border: 1px solid #ccc; /* Рамка вокруг меню */
+    border-radius: 5px; /* Скругление углов */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Тень для меню */
+    z-index: 1; /* Чтобы меню было выше других элементов */
+    margin-top: 40px;
+}
+
+/* Блок фильтрации без кнопок (поиск и очистка) */
+.filter-items {
+    display: flex;
+    flex-wrap: wrap; /* Позволяет элементам переноситься на следующую строку */
+    margin: 20px 30px;
+    gap: 15px;
+    justify-content: last baseline;
+}
+
+/* Название поля */
+.filter-label {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 16px;
+}
+
+/* Настройка поля фильтра по умолчанию */
+.filter-input {
+    width: 180px; /* Поля ввода занимают 100% ширины родителя */
+    height: 35px;
+    padding: 0px 8px; /* Отступы внутри полей */
+    border: 1px solid #ccc; /* Рамка вокруг полей */
+    border-radius: 4px; /* Скругление уголков полей */
+}
+
+
+/* Настройка контейнера дат */
+.filter-input-date-container {
+    display:flex;
+    gap:5px;
+    align-items: baseline;
+}
+
+/* Настройка полей даты */
+.filter-input-date {
+    width: 180px; /* Поля ввода занимают 100% ширины родителя */
+    height: 35px;
+    padding: 0px 8px; /* Отступы внутри полей */
+    border: 1px solid #ccc; /* Рамка вокруг полей */
+    border-radius: 4px; /* Скругление уголков полей */
+}
+
+/* Контейнер кнопок: поиск и очистка */
+.filter-actions {
+    display: flex;
+    gap: 20px;
+    margin: 20px 30px;
+}
+
+/* Кнопка поиска */
+.filter-button-action-search {
+    background-color: #65CB8C;
+}
+.filter-button-action-search:hover {
+    background-color: #218838; /* Более темный зеленый при наведении */
+}
+
+/* Кнопка очистки */
+.filter-button-action-clearing {
+    border: none;
+    background: none;
+    color: black;
+}
+.filter-button-action-clearing:hover {
+    color: gray;
+    background: none;
+}
+
+/* Настройка ширины для поля филтра с выбором значения */
+.filter-select-input {
+    width: 197.6px;
+}

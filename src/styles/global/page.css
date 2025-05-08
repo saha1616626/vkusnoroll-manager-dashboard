@@ -1,0 +1,81 @@
+/* Данный стиль применяется ко многим дочерним компонентам для шапки header */
+
+/* Кнопки управления */
+.button-control {
+    background-color: #ADADAD;
+    color: #ffffff;
+    font-weight: bold;
+    border: 1px solid black;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    padding: 7px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    /*Плавный переход при наведении*/
+}
+
+.button-control:hover {
+    background-color: #999999;
+}
+
+/* Главный контейнер дочерней страницы */
+.page-container {
+    margin: 3em 3em;
+}
+
+/* Горизонталь управляющих элементов (Кноки, поля и тд)  */
+.control-components {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Общая группировка груп элементов над списком/таблицей и тд */
+.grouping-groups-elements {
+    display: flex;
+    /* Отображение кнопок в строку */
+    align-items: center;
+    /* Вертикальное выравнивание кнопок */
+    gap: 50px;
+}
+
+/* Группировка элементов внутри группы */
+.grouping-elements {
+    display: flex;
+    /* Отображение кнопок в строку */
+    align-items: center;
+    /* Вертикальное выравнивание кнопок */
+    gap: 20px;
+}
+
+/* Заголовок страницы */
+.page-title {
+    font-size: 24px;
+    font-weight: bold;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Кнопка "Добавить" */
+.page-button-add {
+    height: 33.2px;
+}
+
+/* Иконка в кнопке добавить */
+.page-icon-button {
+    margin-left: -10px;
+    margin-right: 13px;
+    width: 21px;
+    height: 21px;
+    object-fit: contain; /* Пропорция формы */
+}
+
+/* Таблица */
+.page-table {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+}

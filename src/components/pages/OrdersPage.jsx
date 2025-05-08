@@ -179,7 +179,7 @@ const OrdersPage = () => {
                 label: 'Статус заказа',
                 options: ['Суши', 'Ролы', 'Пицца', 'Напитки', 'Десерты'],
                 placeholder: 'Выберите статус(ы)'
-            },    
+            },
             { type: 'select', name: 'isPaymentStatus', label: 'Статус оплаты', options: ['Оплачен', 'Не оплачен'] },
             {
                 type: 'multi-select',
@@ -188,6 +188,29 @@ const OrdersPage = () => {
                 options: ['Онлайн', 'Наличные', 'Картой при получении'],
                 placeholder: 'Выберите способ(ы)'
             },
+            {
+                type: 'sort',
+                name: 'sort',
+                label: 'Сортировка',
+                options: [
+                    {
+                        type: 'orderDate',
+                        label: 'По дате заказа',
+                        subOptions: [
+                            { value: 'desc', label: 'Новые' },
+                            { value: 'asc', label: 'Старые' }
+                        ]
+                    },
+                    {
+                        type: 'deliveryDate',
+                        label: 'По дате доставки',
+                        subOptions: [
+                            { value: 'asc', label: 'Ближе' },
+                            { value: 'desc', label: 'Дальше' }
+                        ]
+                    }
+                ]
+            }
         ]);
     };
 

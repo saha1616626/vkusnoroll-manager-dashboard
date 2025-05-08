@@ -86,3 +86,116 @@
 .filter-select-input {
     width: 197.6px;
 }
+
+/* Стили для сортировки */
+
+/* Контейнер */
+.sort-filter-container {
+    position: relative;
+    width: 197.6px;
+    z-index: 2;
+}
+
+/* Кнопка */
+.sort-main-button {
+    display: flex;
+    align-items: center;
+    justify-content: left;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    height: 35px;
+    padding: 0px 8px;
+}
+
+.sort-main-button span {
+    width: 100%;
+    padding-right: 10px;
+    /* justify-content: space-between; */
+    text-wrap: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sort-main-button:hover {
+    border-color: #2c7be5;
+}
+
+/* Иконка */
+.sort-chevron {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.2s;
+}
+
+.sort-chevron.open {
+    transform: rotate(180deg);
+}
+
+/* Выпадающее меню */
+.sort-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc; /* Рамка вокруг полей */
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-top: 8px;
+    padding: 8px;
+}
+
+/* Первый уровень опций */
+.sort-option {
+    padding: 6px 0;
+}
+
+/* Первый уровень заголовков */
+.sort-type-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.sort-type-label:hover {
+    background: #f5f5f5;
+}
+
+/* Радио кнопка */
+.sort-type-label input[type="radio"] {
+    accent-color: #2c7be5;
+}
+
+/* Второй уровень опций */
+.sort-sub-options {
+    margin: 4px 0 4px 20px;
+    border-left: 2px solid #eee;
+    padding-left: 12px;
+}
+
+/* Второй уровень заголовков */
+.sort-order-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px;
+    cursor: pointer;
+    color: #666;
+    border-radius: 4px;
+}
+
+.sort-order-label:hover {
+    background: #f5f5f5;
+}
+
+.sort-order-label input[type="radio"] {
+    accent-color: #2c7be5;
+    transform: scale(0.9);
+}

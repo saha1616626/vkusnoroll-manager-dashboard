@@ -14,6 +14,7 @@ import DropdownButtonChange from './../ui/DropdownButtonChange'; // Кнопка
 import SearchInput from './../ui/SearchInput'; // Поле поиска
 import api from '../../utils/api'; // API сервера
 import PaginationBar from '../ui/PaginationBar'; // Панель разбиения контента на страницы
+import DropdownStatusSelection from '../ui/DropdownStatusSelection';  // Выбор отображаемых кнопок со статусами заказов
 
 // Импорт иконок
 import addIcon from './../../assets/icons/add.png'
@@ -57,6 +58,9 @@ const OrdersPage = () => {
     const [currentPage, setCurrentPage] = useState(0); // Текущая страница
     const [totalOrders, setTotalOrders] = useState(0); // Общее количество заказов
     const itemsPerPage = 15; // Кол-во элементов в списке на отображение
+
+    // Статусы
+    const [activeStatuses, setActiveStatuses] = useState([]); // Выбранные статусы заказов
 
     /* 
     ===========================
@@ -171,7 +175,7 @@ const OrdersPage = () => {
             {
                 type: 'date-range-no-time',
                 name: 'simpleDate',
-                label: 'Период'
+                label: 'Период оформления'
             },
             {
                 type: 'multi-select',
@@ -212,6 +216,14 @@ const OrdersPage = () => {
                 ]
             }
         ]);
+    };
+
+    // Нажатие на статус для быстрой фильтрации
+    const handleStatusClick = (statusId) => {
+        const statusIds = activeStatuses.map(s => s.id);
+        // setSelectedStatuses(prev =>
+        //     prev.filter(id => id !== statusId && id !== 'all')
+        // );
     };
 
     // Кнопка закрыть/открыть меню фильтра
@@ -358,7 +370,10 @@ const OrdersPage = () => {
                     />
 
                     {/* Настройка статусов заказов */}
-
+                    <DropdownStatusSelection
+                        pageId={pageId}
+                        onStatusChange={setActiveStatuses}
+                    />
 
                     {/* Настройка колонок */}
                     <DropdownColumnSelection
@@ -381,6 +396,21 @@ const OrdersPage = () => {
                     onSearch={handleFilterSearch}
                     onReset={handleFilterReset}
                 />
+            </div>
+
+            {/* Горизонтальные кнопки выбранных статусов */}
+            <div className="orders-page-status-buttons-container" style={{display: !activeStatuses.length ? 'none' : ''}}>
+                {activeStatuses
+                    .sort((a, b) => a.sequenceNumber - b.sequenceNumber)
+                    .map(status => (
+                        <button
+                            key={status.id}
+                            className="orders-page-status-button"
+                            onClick={() => handleStatusClick(status.id)}
+                        >
+                            {status.name}
+                        </button>
+                    ))}
             </div>
 
             {/* Таблица */}

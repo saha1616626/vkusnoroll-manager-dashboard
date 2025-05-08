@@ -1,2 +1,35 @@
 /* Стили для страницы управления заказами пользователей */
 
+/* Стили для контейнера кнопок статусов */
+.orders-page-status-buttons-container {
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    flex-wrap: wrap;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    margin-top: 40px;
+    margin-bottom: -20px;
+    border-radius: 8px;
+}
+
+/* Стили для кнопок статусов */
+.orders-page-status-button {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid #74b9ff;
+    background: #e3f2fd;
+    color: #0d47a1;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.orders-page-status-button:hover {
+    background: #bbdefb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

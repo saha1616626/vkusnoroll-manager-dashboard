@@ -1,14 +1,14 @@
-/* Настройка отображения колонок */
+/* Стили для меню со списком статусов заказов */
 
-/* Выпадающее меню */
-.dropdown-columns {
+/* Основной контейнер */
+.dropdown-status-container {
     position: relative;
     display: inline-block;
     z-index: 1000;
 }
 
-/* Выпадающий список */
-.dropdown-menu-columns {
+/* Выпадающее меню */
+.dropdown-status-menu {
     position: absolute;
     right: 0;
     background-color: white; /* Цвет заднего фона */
@@ -24,41 +24,46 @@
 }
 
 /* Стилизация скроллбара */
-.dropdown-menu-columns::-webkit-scrollbar {
+.dropdown-status-menu::-webkit-scrollbar {
     width: 12px;
 }
 
-.dropdown-menu-columns::-webkit-scrollbar-thumb {
+.dropdown-status-menu::-webkit-scrollbar-thumb {
     background: #cccccc;
     border-radius: 8px; 
     border: 3px solid white;
 }
 
-/* Заголовок выпадающего списка */
-.dropdown-header {
+/* Шапка меню */
+.dropdown-status-header h4 {
     font-weight: bold;
     text-align: center;
     margin: 10px 0px;
 }
 
-/* Кнопка сброса значений по умолчанию */
-.reset-button-columns {
-    display: flex; /* Блок для центрирования */
-    background-color:  transparent;
+/* Кнопка сброса */
+.dropdown-status-reset {
+    display: flex; 
+    justify-content: left; 
+    align-items: center; 
+    background-color: transparent;
     color: black; 
     font-size: 15px;
-    border: none;
     padding: 8px 9.5px;
-    margin-left: 8px; 
+    margin-left: 9px;
     border-radius: 5px; 
     cursor: pointer;
+    border: none;
+    width: 93%;
+    /* TODO скролл */
 }
-.reset-button-columns:hover {
+
+.dropdown-status-reset:hover {
     background-color: #f1f1f1;
 }
 
-/* Иконка кнопки сброса */
-.icon-reset-button-columns {
+/* Иконка */
+.dropdown-status-reset-icon {
     margin-right: 10px;
     width: 21px;
     height: 21px;
@@ -66,14 +71,14 @@
 }
 
 /* Разделительная линия */
-.divider {
+.dropdown-status-divider {
     border: none; /* Убираем стандартный стиль рамки */
     border-top: 1px solid black; /* Добавляем верхнюю границу */
     margin: 10px 10px; /* Отступы сверху и снизу */
 }
 
-/* Элемент выпадающего списка */
-.dropdown-option-columns {
+/* Элементы статусов */
+.dropdown-status-item {
     display: flex;
     align-items: center;
     padding: 10px 20px; /* Отступы у опций */
@@ -82,18 +87,14 @@
     word-wrap: break-word; /* Перенос слов в опциях */
     max-width: 200px; /* Максимальная ширина для опции */
 }
-.dropdown-option-columns input {
+
+.dropdown-status-items input {
     margin-right: 10px;
     width: 15px;
     height: 15px;
     accent-color: #74b9ff;
-    border: 1px solid #747474;
-    border-radius: 3px;
-    flex-shrink: 0;
-    position: relative;
-    
 }
 
-.dropdown-option-columns:hover {
-    background-color: #f1f1f1; /* Цвет при наведении на опцию */
-}   
+.dropdown-status-item:hover {
+    background-color: #f1f1f1;
+}

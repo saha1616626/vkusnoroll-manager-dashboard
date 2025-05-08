@@ -46,6 +46,9 @@ const apiMethods = {
     // Заказы
     getOrders: (page, limit) => api.get(`/orders/manager/all?page=${page}&limit=${limit}`), // Получение всех заказов с пагинацией
 
+    // Статусы заказов
+    getOrderStatuses: () => api.get('/orderStatuses'),
+
 };
 
 // Экспортируем объект по умолчанию

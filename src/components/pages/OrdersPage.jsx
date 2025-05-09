@@ -185,8 +185,8 @@ const OrdersPage = () => {
             const allStatuses = [...systemStatuses, ...response.data]
                 .sort((a, b) => a.sequenceNumber - b.sequenceNumber);
 
-            return allStatuses.map(status => ({ 
-                id: status.id, 
+            return allStatuses.map(status => ({
+                id: status.id,
                 name: status.name
             }));
         } catch (error) {
@@ -216,9 +216,9 @@ const OrdersPage = () => {
                 name: 'paymentMethod',
                 label: 'Способ оплаты',
                 options: [
-                    {id: 'online', name: 'Онлайн'},
-                    {id: 'cash', name: 'Наличные'},
-                    {id: 'card', name: 'Картой при получении'}
+                    { id: 'online', name: 'Онлайн' },
+                    { id: 'cash', name: 'Наличные' },
+                    { id: 'card', name: 'Картой при получении' }
                 ],
                 placeholder: 'Выберите способ(ы)'
             },
@@ -297,13 +297,30 @@ const OrdersPage = () => {
         try {
             setFilterState(prev => ({
                 ...prev,
-                formData: {}
+                formData: {
+                    // Сохраняем дефолтную сортировку
+                    sort: {
+                        type: 'deliveryDate',
+                        order: 'asc'
+                    }
+                }
             }));
-            setActiveFilters({});
+            setActiveFilters({
+                // Также применяем дефолтную сортировку для активных фильтров
+                sort: {
+                    type: 'deliveryDate',
+                    order: 'asc'
+                }
+            });
             saveFilterState({
                 isOpen: true,
                 isActive: true,
-                formData: {}
+                formData: {
+                    sort: {
+                        type: 'deliveryDate',
+                        order: 'asc'
+                    }
+                }
             });
         } catch (error) {
             console.error('Filter reset error:', error);
@@ -340,17 +357,27 @@ const OrdersPage = () => {
 
     // Инициализация фильтров
     useEffect(() => {
-        const loadCategories = async () => {
+        const loadOrders = async () => {
             const orderStatuses = await fetchOrderStatuses();
             initFilters(orderStatuses);
             const savedState = localStorage.getItem(`filterState_${pageId}`);
-            if (savedState) {
-                const parsedState = JSON.parse(savedState);
-                setFilterState(parsedState);
-                setActiveFilters(parsedState.formData); // Восстанавливаем активные фильтры
-            }
+            
+            // Если нет сохраненного состояния - устанавливаем дефолтную сортировку
+            const defaultState = {
+                isOpen: false,
+                isActive: false,
+                formData: {
+                    sort: {
+                        type: 'deliveryDate',
+                        order: 'asc'
+                    }
+                }
+            };
+
+            setFilterState(savedState ? JSON.parse(savedState) : defaultState);
+            setActiveFilters(savedState ? JSON.parse(savedState).formData : defaultState.formData);
         };
-        loadCategories();
+        loadOrders();
     }, []);
 
     /* 

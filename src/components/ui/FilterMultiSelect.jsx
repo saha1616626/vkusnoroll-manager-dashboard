@@ -14,10 +14,16 @@ const FilterMultiSelect = ({ placeholder, options, selectedValues, onChange }) =
     const inputRef = useRef(null);
 
     // Форматирование отображаемого значения в placeholder поля
-    const formatDisplayValue = useCallback(() => { // useCallback для мемоизации функции
-        if (selectedValues.length === 0) return ''; // Если нет выбранных элементов
-        const joined = selectedValues.join(', ');
-        return joined.length > 28 ? joined.slice(0, 25) + '...' : joined;
+    const formatDisplayValue = useCallback(() => {
+        if (selectedValues.length === 0) return '';
+
+        // Извлекаем имена из объектов
+        const names = selectedValues.map(item => item.name);
+        const joined = names.join(', ');
+
+        return joined.length > 28
+            ? `${joined.slice(0, 25)}...`
+            : joined;
     }, [selectedValues]);
 
     // Обновление displayValue (значения в placeholder) при изменении selectedValues
@@ -37,29 +43,34 @@ const FilterMultiSelect = ({ placeholder, options, selectedValues, onChange }) =
     }, []);
 
     /* 
-  ===========================
-  Обработчики событий
-  ===========================
-*/
+    ===========================
+    Обработчики событий
+    ===========================
+    */
 
     const handleInputFocus = () => {
         setIsOpen(true);
         setInputValue('');
     };
 
+    // Проверка наличия элемента в выбранных значениях
+    const isSelected = (id) =>
+        selectedValues.some(item => item.id === id);
+
+    // Обработчик выбора/снятия элемента
     const handleSelect = (option) => {
-        if (!selectedValues.includes(option)) {
+        if (isSelected(option.id)) {
+            onChange(selectedValues.filter(item => item.id !== option.id));
+        } else {
             onChange([...selectedValues, option]);
         }
-        inputRef.current.focus(); // После выбора элемента фокус остается на списке, список не закрывается
     };
 
-    // Автоматическая фильтрация списка при вводе без учета регистра
-    const filteredOptions = options
-        .filter(option =>
-            !selectedValues.includes(option) &&
-            option.toLowerCase().includes(inputValue.toLowerCase())
-        );
+    // Фильтрация опций
+    const filteredOptions = options.filter(option =>
+        !isSelected(option.id) &&
+        option.name.toLowerCase().includes(inputValue.toLowerCase())
+    );
 
     return (
         <div className="multi-select" ref={wrapperRef}>
@@ -70,22 +81,18 @@ const FilterMultiSelect = ({ placeholder, options, selectedValues, onChange }) =
                 value={isOpen ? inputValue : displayValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onFocus={handleInputFocus}
-                placeholder={
-                    selectedValues.length === 0 
-                        ? [placeholder] // Отображаем в placeholder заранее созданное сообщение, если нет выбранных объектов
-                        : displayValue || 'Выберите элементы'
-                }
+                placeholder={displayValue || placeholder}
                 className="filter-input"
             />
 
             {isOpen && (
                 <div className="multi-select-element-container">
                     <div className="selected-values">
-                        {selectedValues.map(value => (
-                            <span className="selected-item" key={value}>
-                                {value}
+                        {selectedValues.map((item) => (
+                            <span className="selected-item" key={item.id}>
+                                {item.name}
                                 <button
-                                    onClick={() => onChange(selectedValues.filter(v => v !== value))}
+                                    onClick={() => handleSelect(item)}
                                     className="remove-item"
                                 >
                                     &times;
@@ -99,14 +106,13 @@ const FilterMultiSelect = ({ placeholder, options, selectedValues, onChange }) =
                             <hr className="multi-select-divider" /> {/* Разделительная линия */}
 
                             <div className="dropdown-multi-select">
-                                {filteredOptions.map((option, index) => (
+                                {filteredOptions.map((option) => (
                                     <div
-                                        key={index}
+                                        key={option.id}
                                         className="multi-dropdown-item"
-                                        onMouseDown={(e) => e.preventDefault()}
                                         onClick={() => handleSelect(option)}
                                     >
-                                        {option}
+                                        {option.name}
                                     </div>
                                 ))}
                             </div>

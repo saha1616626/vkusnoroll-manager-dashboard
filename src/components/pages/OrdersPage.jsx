@@ -169,11 +169,37 @@ const OrdersPage = () => {
         localStorage.setItem(`filterState_${pageId}`, JSON.stringify(state));
     };
 
+    // Получение списка статусов заказа
+    const fetchOrderStatuses = async () => {
+        try {
+            const response = await api.getOrderStatuses();
+
+            // Проверяем наличие данных
+            if (!response.data || !Array.isArray(response.data)) { throw new Error('Invalid order statuses data'); }
+
+            // Добавляем системный статус
+            const systemStatuses = [
+                { id: 'null', name: 'Новый', sequenceNumber: -1 }
+            ];
+
+            const allStatuses = [...systemStatuses, ...response.data]
+                .sort((a, b) => a.sequenceNumber - b.sequenceNumber);
+
+            return allStatuses.map(status => ({ 
+                id: status.id, 
+                name: status.name
+            }));
+        } catch (error) {
+            console.error('Error:', error.response ? error.response.data : error.message);
+            return [];
+        }
+    };
+
     // Конфигурация фильтра
-    const initFilters = (roles) => {
+    const initFilters = (orderStatuses) => {
         setFilters([
             {
-                type: 'date-range-no-time',
+                type: 'date-range',
                 name: 'simpleDate',
                 label: 'Период оформления'
             },
@@ -181,7 +207,7 @@ const OrdersPage = () => {
                 type: 'multi-select',
                 name: 'orderStatus',
                 label: 'Статус заказа',
-                options: ['Суши', 'Ролы', 'Пицца', 'Напитки', 'Десерты'],
+                options: orderStatuses,
                 placeholder: 'Выберите статус(ы)'
             },
             { type: 'select', name: 'isPaymentStatus', label: 'Статус оплаты', options: ['Оплачен', 'Не оплачен'] },
@@ -189,7 +215,11 @@ const OrdersPage = () => {
                 type: 'multi-select',
                 name: 'paymentMethod',
                 label: 'Способ оплаты',
-                options: ['Онлайн', 'Наличные', 'Картой при получении'],
+                options: [
+                    {id: 'online', name: 'Онлайн'},
+                    {id: 'cash', name: 'Наличные'},
+                    {id: 'card', name: 'Картой при получении'}
+                ],
                 placeholder: 'Выберите способ(ы)'
             },
             {
@@ -311,7 +341,8 @@ const OrdersPage = () => {
     // Инициализация фильтров
     useEffect(() => {
         const loadCategories = async () => {
-            initFilters();
+            const orderStatuses = await fetchOrderStatuses();
+            initFilters(orderStatuses);
             const savedState = localStorage.getItem(`filterState_${pageId}`);
             if (savedState) {
                 const parsedState = JSON.parse(savedState);
@@ -399,7 +430,7 @@ const OrdersPage = () => {
             </div>
 
             {/* Горизонтальные кнопки выбранных статусов */}
-            <div className="orders-page-status-buttons-container" style={{display: !activeStatuses.length ? 'none' : ''}}>
+            <div className="orders-page-status-buttons-container" style={{ display: !activeStatuses.length ? 'none' : '' }}>
                 {activeStatuses
                     .sort((a, b) => a.sequenceNumber - b.sequenceNumber)
                     .map(status => (
@@ -421,7 +452,7 @@ const OrdersPage = () => {
                     onSelectionChange={handleSelectionChange}
                     onRowClick={handleRowClick}
                     tableId={pageId}
-                    centeredColumns={['Номер']}  // Cписок центрируемых колонок
+                    centeredColumns={['Номер', 'Дата и время оформления']}  // Cписок центрируемых колонок
                 />}
             </div>
 

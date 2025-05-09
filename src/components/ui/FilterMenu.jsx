@@ -319,6 +319,12 @@ FilterMenu.propTypes = {
                 PropTypes.arrayOf(PropTypes.string),
                 PropTypes.arrayOf(
                     PropTypes.shape({
+                        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+                        name: PropTypes.string.isRequired
+                    })
+                ),
+                PropTypes.arrayOf(
+                    PropTypes.shape({
                         type: PropTypes.string.isRequired,
                         label: PropTypes.string.isRequired,
                         subOptions: PropTypes.arrayOf(

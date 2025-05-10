@@ -44,7 +44,6 @@ const PersonalAccount = () => {
                 const userId = localStorage.getItem('userId'); // Получение id пользователя из локального хранилища
                 const response = await api.getAccountById(userId);
                 setUserData(response.data);
-                if(response?.data?.name) localStorage.setItem('userName', response?.data?.name); // Обновляем имя в шапке
             } catch (error) {
                 console.error('Ошибка загрузки данных:', error);
             } finally {

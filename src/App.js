@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -24,6 +24,8 @@ import HeaderLayout from './components/layouts/HeaderLayout'; // Header и ве�
 import OrdersPage from './components/pages/OrdersPage'; // Страница для управления заказами пользователей
 import MessageCenterPage from './components/pages/MessageCenterPage'; // Страница "Центр сообщений"
 import PersonalAccount from './components/pages/PersonalAccount'; // Страница "Личный кабинет"
+import api from './utils/api'; // API сервера
+import AccessDeniedPage from './components/pages/AccessDeniedPage'; // Страница для редиректа при ошибке доступа
 
 // Импорт стилей
 import './styles/global/global.css'; // Глобальные стили
@@ -73,6 +75,7 @@ const AppContent = () => {
   // Вывод уведомления о новом заказе в реальном времени
   useEffect(() => {
     const token = localStorage.getItem('authManagerToken'); // Получаем токен из хранилища
+    if (!token) return;
     const ws = new WebSocket(`ws://localhost:5000/ws?token=${encodeURIComponent(token)}`);
 
     ws.onmessage = (event) => {
@@ -97,8 +100,25 @@ const AppContent = () => {
         {/* Защищённые маршруты (Доступные после авторизации) */}
         <Route element={<PrivateRoute />}>
           <Route path="/" element={<HeaderLayout />}>
-            <Route path='/orders' element={<OrdersPage />} />
-            <Route path='/message-center' element={<MessageCenterPage />} />
+
+            <Route path="/access-denied/orders" element={
+              <AccessDeniedPage message="Доступ к управлению заказами временно ограничен администратором" />
+            } />
+
+            <Route path="/access-denied/messages" element={
+              <AccessDeniedPage message="Доступ к центру сообщений временно ограничен администратором" />
+            } />
+
+            <Route path='/orders' element={
+              JSON.parse(localStorage.getItem('accessRestrictions'))?.isOrderManagementAvailable
+                ? <OrdersPage />
+                : <Navigate to="/access-denied/orders" replace />
+            } />
+            <Route path='/message-center' element={
+              JSON.parse(localStorage.getItem('accessRestrictions'))?.isMessageCenterAvailable
+                ? <MessageCenterPage />
+                : <Navigate to="/access-denied/messages" replace />
+            } />
             <Route path='/personal-account' element={<PersonalAccount />} />
           </Route>
         </Route>

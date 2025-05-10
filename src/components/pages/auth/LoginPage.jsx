@@ -68,7 +68,7 @@ const LoginPage = () => {
             updateAuth(true); // Обновляем статус авторизации
             navigate('/');
         } catch (err) {
-            setError('Неверные учетные данные'); // Вывод ошибки
+            setError(err.response.data.error); // Вывод ошибки
         }
     };
 

@@ -34,10 +34,12 @@ const OrdersPage = () => {
     const timeOut = 500; // Задержка перед отключением анимации загрузки данных
     const navigate = useNavigate();
     const location = useLocation();
+    const searchInputRef = React.useRef(); // Ссылка на поле поиска
 
     const [isLoading, setIsLoading] = useState(true); // Анимация загрузки данных
 
     // Фильтр
+    const [isFiltersInitialized, setIsFiltersInitialized] = useState(false); // Отслеживание инициализации фильтров
     const [filters, setFilters] = useState([]); // Массив функций фильтра
     const [filterState, setFilterState] = useState({ // Управление состоянием фильтра (закрытый фильтр по умолчанию)
         isOpen: false, // Меню закрыто
@@ -83,43 +85,93 @@ const OrdersPage = () => {
     // Функция загрузки данных из БД
     const fetchData = useCallback(async () => {
         setIsLoading(true); // Включаем анимацию загрузки данных
-        try {
-            const response = await api.getOrders(currentPage + 1, itemsPerPage);
-            if (response.data) {
-                setRawData(response.data.data); // Оригинальные данные с сервера
-                const total = Number(response.data.total) || 0; // Гарантированное число заказов
-                setTotalOrders(total); // Общее количество заказов
-                setFilteredData(transformData(response.data.data));
+        if (isFiltersInitialized) { // Проверка, что фильтры инициализировались
+            try {
+                // Параметры запроса
+                const params = {
+                    page: currentPage + 1,
+                    limit: itemsPerPage,
+                    ...activeFilters // Все активные фильтры
+                };
+
+                const response = await api.getOrders(params);
+                if (response.data) {
+                    setRawData(response.data.data); // Оригинальные данные с сервера
+                    const total = Number(response.data.total) || 0; // Гарантированное число заказов
+                    setTotalOrders(total); // Общее количество заказов
+                    setFilteredData(transformData(response.data.data));
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки заказов:', error);
+                setTotalOrders(0); // Сбрасываем total при ошибке
+            } finally { // Выключаем анимацию загрузки данных
+                setTimeout(() => setIsLoading(false), timeOut);
             }
-        } catch (error) {
-            console.error('Ошибка загрузки заказов:', error);
-            setTotalOrders(0); // Сбрасываем total при ошибке
-        } finally { // Выключаем анимацию загрузки данных
-            setTimeout(() => setIsLoading(false), timeOut);
         }
-    }, [currentPage]); // Вызываем обновление списка при переключении страниц списка
+    }, [currentPage, activeFilters, isFiltersInitialized]); // Вызываем обновление списка при переключении страниц списка
 
     // Трансформация данных для представления в таблице
     const transformData = (data) => data.map(order => {
+
         // Форматирование даты и времени оформления (обрезаем миллисекунды)
         const formatDateTime = (datetime) => {
             if (!datetime) return '—';
-            return datetime.slice(0, 16).replace('T', ' ');
+
+            const date = new Date(datetime);
+
+            const datePart = date.toLocaleDateString('ru-RU', {
+                timeZone: 'Europe/Moscow',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+            });
+
+            const timePart = date.toLocaleTimeString('ru-RU', {
+                timeZone: 'Europe/Moscow',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            return `${datePart} ${timePart}`;
         };
 
         // Форматирование диапазона доставки
         const formatDeliveryRange = (start, end) => {
             if (!start || !end) return '—';
 
-            const startDate = start.slice(0, 10);
-            const startTime = start.slice(11, 16);
-            const endDate = end.slice(0, 10);
-            const endTime = end.slice(11, 16);
+            const startDateObj = new Date(start);
+            const endDateObj = new Date(end);
 
-            return startDate === endDate
-                ? `${startDate} ${startTime} - ${endTime}`
-                : `${startDate} ${startTime} - ${endDate} ${endTime}`;
+            // Форматируем дату
+            const formatDate = (date) =>
+                date.toLocaleDateString('ru-RU', {
+                    timeZone: 'Europe/Moscow',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                });
+
+            // Форматируем время
+            const formatTime = (date) =>
+                date.toLocaleTimeString('ru-RU', {
+                    timeZone: 'Europe/Moscow',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false,
+                });
+
+            const startDateStr = formatDate(startDateObj);
+            const startTimeStr = formatTime(startDateObj);
+            const endDateStr = formatDate(endDateObj);
+            const endTimeStr = formatTime(endDateObj);
+
+            if (startDateStr === endDateStr) {
+                return `${startDateStr} ${startTimeStr} - ${endTimeStr}`;
+            } else {
+                return `${startDateStr} ${startTimeStr} - ${endDateStr} ${endTimeStr}`;
+            }
         };
+
 
         // Формирование адреса доставки
         const formatAddress = (addr) => {
@@ -155,7 +207,41 @@ const OrdersPage = () => {
 
     // Обновление данные на странице (Иконка)
     const refreshData = async () => {
+        // Обновляем активные фильтры
+        setActiveFilters(prev => {
+            const newFilters = {
+                ...prev,
+                orderStatus: filterState.formData.orderStatus, // Перезаписываем orderStatus
+                isPaymentStatus: filterState.formData.isPaymentStatus,
+                paymentMethod: filterState.formData.paymentMethod,
+                date: {
+                    start: filterState.formData.date?.start,
+                    end: filterState.formData.date?.end
+                },
+                sort: filterState.formData.sort,
+                search: searchInputRef.current.search() // Устанавливаем значение поиска
+            };
 
+            // Создаем копию newFilters БЕЗ поля search для filterState
+            const { search, ...formDataWithoutSearch } = newFilters;
+
+            // Сохраняем новые фильтры в filterState (без search)
+            const newFilterState = {
+                ...filterState,
+                formData: formDataWithoutSearch
+            };
+
+            // Сохраняем в localStorage
+            saveFilterState(newFilterState);
+
+            // Обновляем состояние filterState (без search)
+            setFilterState(prev => ({
+                ...prev,
+                formData: formDataWithoutSearch
+            }));
+
+            return newFilters;
+        });
     };
 
     /* 
@@ -166,7 +252,12 @@ const OrdersPage = () => {
 
     // Сохранение состояния фильтров
     const saveFilterState = (state) => {
-        localStorage.setItem(`filterState_${pageId}`, JSON.stringify(state));
+        localStorage.setItem(`filterState_${pageId}`, JSON.stringify({
+            ...state,
+            formData: {
+                ...state.formData,
+            }
+        }));
     };
 
     // Получение списка статусов заказа
@@ -249,11 +340,42 @@ const OrdersPage = () => {
     };
 
     // Нажатие на статус для быстрой фильтрации
-    const handleStatusClick = (statusId) => {
-        const statusIds = activeStatuses.map(s => s.id);
-        // setSelectedStatuses(prev =>
-        //     prev.filter(id => id !== statusId && id !== 'all')
-        // );
+    const handleStatusClick = (statusId, statusName) => {
+
+        const orderStatus = statusId === 'all' ? [] : [{ id: statusId, name: statusName }];
+
+        // Обновляем активные фильтры
+        setActiveFilters(prev => {
+            const newFilters = {
+                ...prev,
+                orderStatus: orderStatus, // Перезаписываем orderStatus
+                isPaymentStatus: filterState.formData.isPaymentStatus,
+                paymentMethod: filterState.formData.paymentMethod,
+                date: {
+                    start: filterState.formData.date?.start,
+                    end: filterState.formData.date?.end
+                },
+                sort: filterState.formData.sort
+            };
+
+            // Сохраняем новые фильтры в filterState
+            const newFilterState = {
+                ...filterState,
+                formData: newFilters
+            };
+
+            // Сохраняем в localStorage
+            saveFilterState(newFilterState);
+
+            // Обновляем состояние фильтра для синхронизации
+            setFilterState(prev => ({
+                ...prev,
+                formData: newFilters
+            }));
+
+            return newFilters;
+        });
+
     };
 
     // Кнопка закрыть/открыть меню фильтра
@@ -281,9 +403,23 @@ const OrdersPage = () => {
     const handleFilterSearch = () => {
         setIsLoading(true); // Включаем анимацию загрузки данных
         try {
+            // Нормализуем данные перед отправкой
+            const serverFilters = {
+                orderStatus: filterState.formData.orderStatus,
+                isPaymentStatus: filterState.formData.isPaymentStatus,
+                paymentMethod: filterState.formData.paymentMethod,
+                date: {
+                    start: filterState.formData.date?.start,
+                    end: filterState.formData.date?.end
+                },
+                sort: filterState.formData.sort
+            };
+
+            searchInputRef.current?.clear(); // Очистка поля поиска
+
             // Сохраняем значения полей фильтра
-            setActiveFilters(filterState.formData);
-            saveFilterState({ ...filterState, formData: filterState.formData });
+            setActiveFilters(serverFilters);
+            saveFilterState({ ...filterState, formData: serverFilters });
         } catch (error) {
             console.error('Filter search error:', error);
         } finally {
@@ -295,6 +431,8 @@ const OrdersPage = () => {
     const handleFilterReset = () => {
         setIsLoading(true);
         try {
+            searchInputRef.current?.clear(); // Очистка поля поиска
+
             setFilterState(prev => ({
                 ...prev,
                 formData: {
@@ -329,6 +467,45 @@ const OrdersPage = () => {
         }
     };
 
+    // Поле поиска
+    const handleSearch = (term) => {
+        // Обновляем активные фильтры
+        setActiveFilters(prev => {
+            const newFilters = {
+                ...prev,
+                orderStatus: filterState.formData.orderStatus, // Перезаписываем orderStatus
+                isPaymentStatus: filterState.formData.isPaymentStatus,
+                paymentMethod: filterState.formData.paymentMethod,
+                date: {
+                    start: filterState.formData.date?.start,
+                    end: filterState.formData.date?.end
+                },
+                sort: filterState.formData.sort,
+                search: term.trim()
+            };
+
+            // Создаем копию newFilters БЕЗ поля search для filterState
+            const { search, ...formDataWithoutSearch } = newFilters;
+
+            // Сохраняем новые фильтры в filterState (без search)
+            const newFilterState = {
+                ...filterState,
+                formData: formDataWithoutSearch
+            };
+
+            // Сохраняем в localStorage
+            saveFilterState(newFilterState);
+
+            // Обновляем состояние filterState (без search)
+            setFilterState(prev => ({
+                ...prev,
+                formData: formDataWithoutSearch
+            }));
+
+            return newFilters;
+        });
+    };
+
     /* 
     ===========================
      Управление таблицей
@@ -360,22 +537,35 @@ const OrdersPage = () => {
         const loadOrders = async () => {
             const orderStatuses = await fetchOrderStatuses();
             initFilters(orderStatuses);
-            const savedState = localStorage.getItem(`filterState_${pageId}`);
-            
+
+            const savedStateRaw = localStorage.getItem(`filterState_${pageId}`);
+            const savedState = savedStateRaw ? JSON.parse(savedStateRaw) : null;
+
+            if (savedState?.formData?.sort) {
+                try {
+                    // Проверяем, нужно ли парсить sort (если это строка)
+                    savedState.formData.sort = typeof savedState.formData.sort === 'string'
+                        ? JSON.parse(savedState.formData.sort)
+                        : savedState.formData.sort;
+                } catch (e) {
+                    console.error('Error parsing sort filter:', e);
+                    savedState.formData.sort = null;
+                }
+            }
+
             // Если нет сохраненного состояния - устанавливаем дефолтную сортировку
             const defaultState = {
                 isOpen: false,
                 isActive: false,
                 formData: {
-                    sort: {
-                        type: 'deliveryDate',
-                        order: 'asc'
-                    }
+                    sort: { type: 'deliveryDate', order: 'asc' }
                 }
             };
 
-            setFilterState(savedState ? JSON.parse(savedState) : defaultState);
-            setActiveFilters(savedState ? JSON.parse(savedState).formData : defaultState.formData);
+            setFilterState(savedState || defaultState);
+            setActiveFilters(savedState?.formData || defaultState.formData);
+
+            setIsFiltersInitialized(true); // Фильтры инициализировались
         };
         loadOrders();
     }, []);
@@ -422,9 +612,9 @@ const OrdersPage = () => {
 
                     {/* Поиск */}
                     <SearchInput
-                        // ref={searchInputRef}
+                        ref={searchInputRef}
                         placeholder="Поиск заказа по номеру"
-                    // onSearch={handleSearch}
+                        onSearch={handleSearch}
                     />
 
                     {/* Настройка статусов заказов */}
@@ -464,7 +654,7 @@ const OrdersPage = () => {
                         <button
                             key={status.id}
                             className="orders-page-status-button"
-                            onClick={() => handleStatusClick(status.id)}
+                            onClick={() => handleStatusClick(status.id, status.name)}
                         >
                             {status.name}
                         </button>

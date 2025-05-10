@@ -38,7 +38,7 @@ const DropdownStatusSelection = ({ pageId, onStatusChange }) => {
                 // Добавляем системные статусы
                 const systemStatuses = [
                     { id: 'all', name: 'Все', sequenceNumber: -2 },
-                    { id: 'new', name: 'Новый', sequenceNumber: -1 }
+                    { id: 'null', name: 'Новый', sequenceNumber: -1 }
                 ];
 
                 const allStatuses = [...systemStatuses, ...dbStatuses]

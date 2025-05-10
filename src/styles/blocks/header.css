@@ -90,3 +90,107 @@
     font-weight: 500;
     opacity: 0.7;
 }
+
+/* Шторка уведомлений */
+
+/* Контейнер иконки */
+.header-notification-bell {
+    /* position: relative;
+    cursor: pointer;
+    padding: 8px;
+    font-size: 24px; */
+}
+
+/* Число уведомлений */
+.header-notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4757;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Контейнер панели */
+.order-notification-panel {
+    position: absolute;
+    top: 70px;
+    right: 20px;
+    width: 400px;
+    background: white;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    border-radius: 12px;
+    z-index: 1000;
+    transform-origin: top right;
+    animation: panelSlide 0.3s ease;
+}
+
+/* Анимация раскрытия */
+@keyframes panelSlide {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Заголовок */
+.order-notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Список */
+.order-notification-list {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* Элемент списка */
+.order-notification-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f5f5f5;
+    transition: background 0.2s;
+}
+
+.order-notification-item:hover {
+    background: #f9f9f9;
+}
+
+/* Сообщение элемента списка */
+.order-notification-content {
+    flex-grow: 1;
+}
+
+.order-notification-content small, span {
+    display: block;
+    color: #666;
+    font-size: 0.8em;
+    margin-top: 4px;
+}
+
+/* Удалить уведомление */
+.order-notification-close {
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 8px;
+}

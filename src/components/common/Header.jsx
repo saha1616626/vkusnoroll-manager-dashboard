@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 
+// Контекс
+import { useOrderNotifications } from "../contexts/OrderNotificationContext"; // Контекст уведомления о новом заказе
+
 // Импорт компонентов
 
 
@@ -31,6 +34,8 @@ const Header = () => {
         name: localStorage.getItem('userName') || '',
         role: localStorage.getItem('userRole') || ''
     });
+
+    const { notifications, togglePanel, isPanelOpen, clearAllNotifications, removeNotification } = useOrderNotifications(); // Состояния из контекста уведомления о новом заказе
 
     /* 
     ===========================
@@ -138,11 +143,55 @@ const Header = () => {
                         <span className="header-user-name">{userData.name}</span>
                         <span className="header-user-role">{userData.role}</span>
                     </div>
+
+                    {/* Личныйы кабинет */}
                     <img
                         src={userIcon}
                         alt="User"
                         onClick={handleUserClick}
                     />
+
+                    {/* Шторка уведомлений */}
+                    <div className="header-notification-bell" onClick={togglePanel}>
+                        🔔
+                        {notifications.length > 0 && (
+                            <span className="header-notification-badge">
+                                {notifications.length}
+                            </span>
+                        )}
+                    </div>
+
+                    {isPanelOpen && (
+                        <div className="order-notification-panel">
+                            <div className="order-notification-header">
+                                <h3>Уведомления о заказах</h3>
+                                <button
+                                    onClick={clearAllNotifications}
+                                    className="order-notification-clear-all"
+                                >
+                                    Очистить все
+                                </button>
+                            </div>
+
+                            <div className="order-notification-list">
+                                {notifications.map(notification => (
+                                    <div key={notification.id} className="order-notification-item">
+                                        <div className="order-notification-content">
+                                            <span>{notification.text}</span>
+                                            <small>{notification.date}</small>
+                                        </div>
+                                        <button
+                                            onClick={() => removeNotification(notification.id)}
+                                            className="order-notification-close"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                 </div>
             </header>
         </div>

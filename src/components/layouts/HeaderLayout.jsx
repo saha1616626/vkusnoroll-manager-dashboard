@@ -1,6 +1,7 @@
 // Компонент для отображения Header и его дочерних страниц
 
 import React from "react";
+import OrderNotificationBanner from "./../ui/OrderNotificationBanner";
 import { Outlet } from "react-router-dom";
 
 // Импорт компонентов
@@ -10,6 +11,8 @@ const HeaderLayout = () => {
     return (
         <div>
             <Header />
+            {/* Уведомление */}
+            <OrderNotificationBanner />
             <Outlet />
         </div>
     );

@@ -10,9 +10,11 @@ import {
 
 // Провайдеры
 import { AuthProvider } from './components/contexts/AuthContext'; // Провайдер авторизации
+import { OrderNotificationProvider } from './components/contexts/OrderNotificationContext'; // Провайдер уведомления
 
 // Контекс
 import { useAuth } from "./components/contexts/AuthContext"; // Контекст авторизации
+import { useOrderNotifications } from './components/contexts/OrderNotificationContext'; // Контекст уведомления о новом заказе
 
 // Компоненты
 import { isTokenValid } from './utils/auth'; // Проверка токена
@@ -30,7 +32,10 @@ function App() {
   return (
     <Router>
       <AuthProvider> {/* Провайдер авторизации */}
-        <AppContent />
+        {/* Провайдер уведомления */}
+        <OrderNotificationProvider>
+          <AppContent />
+        </OrderNotificationProvider>
       </AuthProvider>
     </Router>
   );
@@ -38,6 +43,7 @@ function App() {
 
 const AppContent = () => {
   const { isAuthenticated, updateAuth } = useAuth(); // Состояния из контекста авторизации
+  const { addNotification } = useOrderNotifications(); // Состояние из контекста уведомления о новом заказе
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -64,16 +70,25 @@ const AppContent = () => {
     return () => clearInterval(interval);
   }, [checkTokenValidity]);
 
+  // Вывод уведомления о новом заказе в реальном времени
+  useEffect(() => {
+    const token = localStorage.getItem('authManagerToken'); // Получаем токен из хранилища
+    const ws = new WebSocket(`ws://localhost:5000/ws?token=${encodeURIComponent(token)}`);
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'NEW_ORDER') {
+        addNotification(data.orderId, data.orderNumber, data.orderPlacementTime);
+      }
+    };
+
+    // Очистка
+    return () => ws.close();
+  }, [isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps 
+
   return (
     <>
       <Routes>
-        {/* Проверка статуса авторизации */}
-        {/* <Route path="/" element={
-          isAuthenticated
-            ? <Navigate to="/" replace />
-            : <Navigate to="/login" replace />
-        } /> */}
-
         {/* Автоматическая навигация в приватный контент в случае успешной авторизации */}
         <Route index element={<Navigate to="/orders" replace />} />
 

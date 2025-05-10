@@ -4,7 +4,7 @@
 .dropdown-status-container {
     position: relative;
     display: inline-block;
-    z-index: 1000;
+    z-index: 2;
 }
 
 /* Выпадающее меню */

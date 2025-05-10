@@ -77,10 +77,10 @@ const PersonalAccount = () => {
 
     // Выход из аккаунта
     const handleLogOut = () => {
+        updateAuth(false); // Передаем состояние о выходе
         // Токен, роль, id и имя удаляется из локального хранилища
         ['authManagerToken', 'userRole', 'userId', 'userName']
             .forEach(key => localStorage.removeItem(key));
-        updateAuth(false); // Передаем состояние о выходе
         navigate('/login');
     };
 

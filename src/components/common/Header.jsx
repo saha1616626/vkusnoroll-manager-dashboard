@@ -50,7 +50,7 @@ const Header = () => {
     ===========================
     */
 
-    // Каждые 5 минут проверяем данные пользователя. Обновляем данные, проверяем ограничения
+    // Каждые 5 минут или при перезагрузке проверяем данные пользователя. Обновляем данные, проверяем ограничения
     useEffect(() => {
         const fetchUserData = async () => {
             try {
@@ -108,7 +108,7 @@ const Header = () => {
         fetchUserData();
 
         // Периодическуя синхронизация
-        const syncInterval = setInterval(fetchUserData, 300000); // 5 минут
+        const syncInterval = setInterval(fetchUserData, 3000); // 5 минут
 
         // Очистка при размонтировании компонента
         return () => {
@@ -116,21 +116,24 @@ const Header = () => {
         };
     }, []); // eslint-disable-line react-hooks/exhaustive-deps 
 
-    // Загрузка ограничений доступа при изменении маршрута
+    // Автоматически изменяем маршрут при обновлении ограничений роли
     useEffect(() => {
-        const savedRestrictions = localStorage.getItem('accessRestrictions');
-        if (savedRestrictions) {
-            setAccessRestrictions(JSON.parse(savedRestrictions));
+        // Если доступ зблокирован к страницам, то после перезагрузки происходит маршрутизация на специальную страницу
+        if (location.pathname.startsWith('/orders') && !accessRestrictions.isOrderManagementAvailable) {
+            navigate('/access-denied/orders');
+        }
+        if (location.pathname.startsWith('/message-center') && !accessRestrictions.isMessageCenterAvailable) {
+            navigate('/access-denied/messages');
         }
 
-        // Если доступ разблокирован к страницам, то после перезагрузки или редиректа происходит маршрутизация на разблокированный контент
+        // Если доступ разблокирован к страницам, то после перезагрузки происходит маршрутизация на разблокированный контент
         if (location.pathname.startsWith('/access-denied/orders') && accessRestrictions.isOrderManagementAvailable) {
             navigate('/orders');
         }
         if (location.pathname.startsWith('/access-denied/messages') && accessRestrictions.isMessageCenterAvailable) {
             navigate('/message-center');
         }
-    }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps 
+    }, [accessRestrictions]); // eslint-disable-line react-hooks/exhaustive-deps  
 
     // Определение активной кнопки при загрузке и изменении маршрута
     useEffect(() => {

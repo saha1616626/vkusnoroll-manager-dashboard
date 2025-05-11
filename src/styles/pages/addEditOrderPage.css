@@ -1,1 +1,233 @@
 /* Стили для страницы добавления и редактирования заказа */
+
+/* Контейнер страницы */
+.add-edit-order-container {
+    margin: 3em 3em;
+}
+
+/* Шапка страницы */
+.add-edit-order-header {
+    /* display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px; */
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Заголовок страницы */
+.add-edit-order-title {
+    font-size: 24px;
+    font-weight: bold;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Группа кнопок в шапке */
+.add-edit-order-header-controls {
+    display: flex;
+    gap: 1rem;
+}
+
+/* Кнопка сохранить */
+.add-edit-order-save-btn {
+    background-color: #83D167;
+}
+
+.add-edit-order-save-btn:hover {
+    background-color: #3e9b1d;
+}
+
+/* Основной контент - двухколоночный макет */
+.add-edit-order-content {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 2rem;
+}
+
+/* Стили для секций */
+.add-edit-order-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Заголовок для секции */
+.add-edit-order-subtitle {
+    font-size: 1.3rem;
+    color: #2c3e50;
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 0.8rem;
+    border-bottom: 2px solid #eee;
+}
+
+/* Группы полей ввода */
+.add-edit-order-form-group {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.add-edit-order-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.add-edit-order-input-group label {
+    font-size: 0.9rem;
+    color: #636e72;
+    font-weight: 500;
+}
+
+/* Стили для полей ввода и текстовых областей */
+.add-edit-order-input,
+.add-edit-order-textarea {
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+    width: 100%;
+}
+
+.add-edit-order-input:focus,
+.add-edit-order-textarea:focus {
+    outline: none;
+    border-color: #27ae60;
+    box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.1);
+}
+
+/* Стили для радиокнопок способа оплаты */
+.add-edit-order-payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.add-edit-order-payment-methods label {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.add-edit-order-payment-methods label:hover {
+    background: #e9ecef;
+}
+
+/* Блок с картой и полями адреса */
+.add-edit-order-map-container {
+    height: 400px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.add-edit-order-address-fields {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* Поле стоимости доставки */
+.add-edit-order-delivery-price {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.add-edit-order-delivery-price input {
+    flex: 1;
+}
+
+/* Таблица товаров */
+.add-edit-order-products-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.add-edit-order-products-table th,
+.add-edit-order-products-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.add-edit-order-products-table th {
+    background: #f8f9fa;
+    color: #636e72;
+    font-weight: 500;
+}
+
+/* Сайдбар с итоговой информацией */
+.add-edit-order-sidebar {
+    position: sticky;
+    top: 100px;
+    height: fit-content;
+}
+
+.add-edit-order-summary-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+}
+
+.add-edit-order-summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    color: #636e72;
+}
+
+.add-edit-order-summary-total {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #2c3e50;
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 2px solid #eee;
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+    .add-edit-order-content {
+        grid-template-columns: 1fr;
+    }
+
+    .add-edit-order-sidebar {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .add-edit-order-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .add-edit-order-address-fields {
+        grid-template-columns: 1fr;
+    }
+}

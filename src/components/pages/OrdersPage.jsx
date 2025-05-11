@@ -69,8 +69,8 @@ const OrdersPage = () => {
      Навигация и CRUD операции
     ===========================
     */
-    const handleAddClick = () => navigate('/orders/new', { replace: true }); // Переход на страницу добавления
-    const handleEditClick = (order) => navigate(`/orders/edit/${order.id}`, { replace: true }); // Переход на страницу редактирования
+    const handleAddClick = () => navigate('/orders/new'); // Переход на страницу добавления
+    const handleEditClick = (order) => navigate(`/orders/edit/${order.id}`); // Переход на страницу редактирования
     const handleRowClick = (rowData) => { // Обработчик клика по строке в таблице
         const originalData = rawData.find(order => order.id === rowData.id); // Получаем исходные данные по id из выбранной строки
         if (originalData) handleEditClick(originalData); // Передаем данные выбранной строки и запускаем страницу для редактирования

@@ -1,6 +1,6 @@
 // Шапка
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 
 // Контекс
@@ -16,6 +16,7 @@ import "./../../styles/global/page.css" // Родительский стиль
 
 // Импорт иконок
 import userIcon from './../../assets/icons/user.png';
+import bellIcon from './../../assets/icons/bell.png';
 
 const Header = () => {
 
@@ -40,8 +41,8 @@ const Header = () => {
         role: localStorage.getItem('userRole') || ''
     });
 
-    const { notifications, togglePanel, isPanelOpen, clearAllNotifications, removeNotification } = useOrderNotifications(); // Состояния из контекста уведомления о новом заказе
-
+    const notificationPanelRef = useRef(null); // Ссылка на панель уведомления
+    const { allNotifications, togglePanel, isPanelOpen, clearAllNotifications, removeNotification } = useOrderNotifications(); // Состояния из контекста уведомления о новом заказе
     const { updateAuth } = useAuth(); // Состояния из контекста авторизации
 
     /* 
@@ -108,7 +109,7 @@ const Header = () => {
         fetchUserData();
 
         // Периодическуя синхронизация
-        const syncInterval = setInterval(fetchUserData, 3000); // 5 минут
+        const syncInterval = setInterval(fetchUserData, 300000); // 5 минут
 
         // Очистка при размонтировании компонента
         return () => {
@@ -152,6 +153,18 @@ const Header = () => {
         };
     }, []);
 
+    // Обработчик клика вне панели уведомления
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (notificationPanelRef.current && !notificationPanelRef.current.contains(event.target) && isPanelOpen) {
+                togglePanel(); // Закрываем окно
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [togglePanel]); // eslint-disable-line react-hooks/exhaustive-deps 
+
     /* 
     ===========================
      Обработчики событий
@@ -191,6 +204,12 @@ const Header = () => {
     // Обработчики кликов
     const handleLogoClick = () => handleNavigation('/orders', true);
     const handleUserClick = () => handleNavigation('/personal-account', false);
+
+    // Навигация к выбранному заказу из панели уведомления
+    const handleNavigationOrder = (path) => {
+        togglePanel();
+        navigate(path);
+    }
 
     /* 
     ===========================
@@ -234,7 +253,7 @@ const Header = () => {
                     </button>
                 </nav>
 
-                <div className="header-icons">
+                <div className="header-icons" ref={notificationPanelRef}>
                     <div className="header-user-details">
                         <span className="header-user-name">{userData.name}</span>
                         <span className="header-user-role">{userData.role}</span>
@@ -248,45 +267,62 @@ const Header = () => {
                     />
 
                     {/* Шторка уведомлений */}
-                    <div className="header-notification-bell" onClick={togglePanel}>
-                        🔔
-                        {notifications.length > 0 && (
-                            <span className="header-notification-badge">
-                                {notifications.length}
-                            </span>
+                    <div ref={notificationPanelRef}>
+                        <div className="header-notification-bell" onClick={togglePanel}>
+                            <img
+                                src={bellIcon}
+                                alt="User"
+                            />
+                            {allNotifications.length > 0 && (
+                                <span className={`header-notification-badge ${allNotifications.length > 99 ? 'header-notification-badge--large' : ''}`} >
+                                    {allNotifications.length}
+                                </span>
+                            )}
+                        </div>
+
+                        {isPanelOpen && (
+                            <div className="order-notification-panel">
+                                <div className="order-notification-header">
+                                    <h3>Уведомления о заказах</h3>
+                                    <button
+                                        onClick={clearAllNotifications}
+                                        className="order-notification-clear-all"
+                                    >
+                                        Очистить все
+                                    </button>
+                                </div>
+
+                                <div className="order-notification-list">
+                                    {allNotifications.length === 0 ? (
+                                        <div className="notification-empty-state">
+                                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                            </svg>
+                                            <span>Новых уведомлений нет</span>
+                                            <small>Здесь будут появляться новые заказы</small>
+                                        </div>
+                                    ) :
+                                        (allNotifications.map(notification => (
+                                            <div key={notification.id} className="order-notification-item">
+                                                <div className="order-notification-content"
+                                                    // Переход на страницу с заказом
+                                                    onClick={() => handleNavigationOrder(`/orders/edit/${notification.id}`)}>
+                                                    <span>{notification.text}</span>
+                                                    <small>{notification.date}</small>
+                                                </div>
+                                                <button
+                                                    onClick={() => removeNotification(notification.id)}
+                                                    className="order-notification-close"
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
+                                        ))
+                                        )}
+                                </div>
+                            </div>
                         )}
                     </div>
-
-                    {isPanelOpen && (
-                        <div className="order-notification-panel">
-                            <div className="order-notification-header">
-                                <h3>Уведомления о заказах</h3>
-                                <button
-                                    onClick={clearAllNotifications}
-                                    className="order-notification-clear-all"
-                                >
-                                    Очистить все
-                                </button>
-                            </div>
-
-                            <div className="order-notification-list">
-                                {notifications.map(notification => (
-                                    <div key={notification.id} className="order-notification-item">
-                                        <div className="order-notification-content">
-                                            <span>{notification.text}</span>
-                                            <small>{notification.date}</small>
-                                        </div>
-                                        <button
-                                            onClick={() => removeNotification(notification.id)}
-                                            className="order-notification-close"
-                                        >
-                                            ×
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
 
                 </div>
             </header>

@@ -26,6 +26,7 @@ import MessageCenterPage from './components/pages/MessageCenterPage'; // Стр�
 import PersonalAccount from './components/pages/PersonalAccount'; // Страница "Личный кабинет"
 import api from './utils/api'; // API сервера
 import AccessDeniedPage from './components/pages/AccessDeniedPage'; // Страница для редиректа при ошибке доступа
+import AddEditOrderPage from './components/pages/AddEditOrderPage'; // Страница для управления заказами
 
 // Импорт стилей
 import './styles/global/global.css'; // Глобальные стили
@@ -114,11 +115,23 @@ const AppContent = () => {
                 ? <OrdersPage />
                 : <Navigate to="/access-denied/orders" replace />
             } />
+            <Route path='/orders/new' element={
+              JSON.parse(localStorage.getItem('accessRestrictions'))?.isOrderManagementAvailable
+                ? <AddEditOrderPage mode="add" />
+                : <Navigate to="/access-denied/orders" replace />
+            } />
+            <Route path='/orders/edit/:id' element={
+              JSON.parse(localStorage.getItem('accessRestrictions'))?.isOrderManagementAvailable
+                ? <AddEditOrderPage mode="edit" />
+                : <Navigate to="/access-denied/orders" replace />
+            } />
+
             <Route path='/message-center' element={
               JSON.parse(localStorage.getItem('accessRestrictions'))?.isMessageCenterAvailable
                 ? <MessageCenterPage />
                 : <Navigate to="/access-denied/messages" replace />
             } />
+            
             <Route path='/personal-account' element={<PersonalAccount />} />
           </Route>
         </Route>

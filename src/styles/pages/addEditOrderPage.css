@@ -98,7 +98,11 @@
     border-radius: 8px;
     font-size: 1rem;
     transition: border-color 0.3s;
-    width: 100%;
+}
+
+/* Поля для ввода данных получателей */
+.add-edit-order-input-recipients-details {
+    width: 250px;
 }
 
 .add-edit-order-input:focus,
@@ -108,42 +112,175 @@
     box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.1);
 }
 
+/* Подсветка поля при ошибке заполнения */
+.input-error {
+    border-color: #ff6b6b !important;
+    background: #fff5f5;
+}
+
+/* Заголовок поля */
+.add-edit-order-field-label {
+    font-size: 0.9rem;
+    color: #636e72;
+    font-weight: 500;
+}
+
 /* Стили для радиокнопок способа оплаты */
 .add-edit-order-payment-methods {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+
 }
 
-.add-edit-order-payment-methods label {
+/* Группа радиокнопки и текста */
+.add-edit-order-payment-radio-group {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 12px;
+    width: 100%;
+}
+
+/* Радио кнопка */
+.add-edit-order-radio {
+    width: 18px;
+    height: 18px;
+    accent-color: #27ae60;
+}
+
+/* Название способа оплаты */
+.add-edit-order-payment-label {
+    display: block;
+    width: calc(100% - 1.5rem - 8px);
+    cursor: pointer;
     padding: 1rem;
     border-radius: 8px;
-    background: #f8f9fa;
-    cursor: pointer;
     transition: background 0.3s;
 }
 
-.add-edit-order-payment-methods label:hover {
-    background: #e9ecef;
+.add-edit-order-payment-label:hover {
+    background: #f8f8f8;
+}
+
+/* Контейнер поля для сдачи */
+.add-edit-order-change-field {
+    width: 30%;
+    margin: 12px 0 0 0rem;
+    padding: 1rem;
+    background: #f8f8f8;
+    border-radius: 8px;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Контейнер для ввода суммы сдачи */
+.add-edit-order-currency-input {
+    position: relative;
+    width: 100%;
+    margin-top: 8px;
+}
+
+/* Поле для ввода сдачи */
+.add-edit-order-currency-input input {
+    width: calc(100% - 0.8rem - 14px);
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.add-edit-order-currency-input input:focus {
+    outline: none;
+    border-color: #27ae60;
+}
+
+/* Символ рубля */
+.add-edit-order-currency {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #7f8c8d;
+    pointer-events: none;
+    /* Игнорирует клики */
 }
 
 /* Блок с картой и полями адреса */
 .add-edit-order-map-container {
-    height: 400px;
-    background: #f8f9fa;
-    border-radius: 12px;
+    display: flex;
+    gap: 2rem;
+    /* background: #f8f9fa; */
     overflow: hidden;
     margin-bottom: 1.5rem;
+    width: 100%;
+    min-height: 500px;
 }
 
+/* Карта */
+.add-edit-order-map {
+    flex-grow: 1;
+    height: 500px;
+    background: #f0f0f0;
+
+    /* Закругление только для карты */
+    border-radius: 12px;
+    overflow: hidden;
+    /* Важно для обрезки углов */
+}
+
+/* Контейнер полей адреса доставки */
 .add-edit-order-address-fields {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    width: 400px;
+    /* padding: 25px; */
+    background: white;
+    overflow-y: auto;
+}
+
+/* Поля для ввода адреса */
+
+/* Дополнительные поля адресе */
+.add-edit-order-extra-fields {
+    display: flex;
+    flex-direction: column;
     gap: 1rem;
     margin-top: 1.5rem;
+}
+
+.add-edit-order-extra-fields input,
+.add-edit-order-extra-fields textarea {
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+.add-edit-order-extra-fields textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Чек-бокс "Частный дом" */
+.add-edit-order-checkbox-group {
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Поле чекбокса */
+.add-edit-order-checkbox-group input {
+    width: 20px;
+    height: 20px;
+    accent-color: #74b9ff;
+}
+
+/* Заголовок чекбокса */
+.add-edit-order-checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-size: 14px;
+    color: #636e72;
+    font-weight: 500;
 }
 
 /* Поле стоимости доставки */
@@ -151,6 +288,8 @@
     display: flex;
     gap: 1rem;
     align-items: center;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
 }
 
 .add-edit-order-delivery-price input {
@@ -159,22 +298,23 @@
 
 /* Таблица товаров */
 .add-edit-order-products-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
+    margin-top: 0.8rem;
 }
 
-.add-edit-order-products-table th,
-.add-edit-order-products-table td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid #eee;
+/* Кнопки управления товарами в таблице */
+.add-edit-order-products-header button {
+    margin-left: 10px;
+    padding: 6px 12px;
+    background: #83D167;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
 }
 
-.add-edit-order-products-table th {
-    background: #f8f9fa;
-    color: #636e72;
-    font-weight: 500;
+.add-edit-order-products-header button:hover {
+    background: #6db356;
 }
 
 /* Сайдбар с итоговой информацией */
@@ -211,23 +351,41 @@
 
 /* Адаптивность */
 @media (max-width: 1200px) {
+
+    /* Основной контент - двухколоночный макет */
     .add-edit-order-content {
         grid-template-columns: 1fr;
     }
 
+    /* Сайдбар с итоговой информацией */
     .add-edit-order-sidebar {
         position: static;
+    }
+
+    /* Блок с картой и полями адреса */
+    .add-edit-order-map-container {
+        flex-direction: column;
+    }
+
+    /* Контейнер полей адреса доставки */
+    .add-edit-order-address-fields {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    /* Карта */
+    .add-edit-order-map {
+        height: 400px;
     }
 }
 
 @media (max-width: 768px) {
+
+    /* Шапка страницы */
     .add-edit-order-header {
         flex-direction: column;
         gap: 1rem;
         align-items: flex-start;
-    }
-
-    .add-edit-order-address-fields {
-        grid-template-columns: 1fr;
     }
 }

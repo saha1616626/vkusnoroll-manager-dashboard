@@ -50,6 +50,12 @@ const apiMethods = {
     // Статусы заказов
     getOrderStatuses: () => api.get('/orderStatuses'),
 
+    // Список категорий
+    getCategories: () => api.get('/categories'),
+
+    // Список блюд
+    getUnarchivedDishesNoImageWithActiveCategory: () => api.get('/dishes/available-no-image'), // Получение списка блюд без изображения и те товары, которые не в архиве, и их категория не в архиве
+
 };
 
 // Экспортируем объект по умолчанию

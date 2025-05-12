@@ -11,7 +11,20 @@ const ConfirmationModal = ({
     onConfirm,
     onCancel
 }) => {
+
+    /* 
+    ===============================
+     Состояния, константы и ссылки
+    ===============================
+    */
+
     const modalRef = useRef(null); // Ссылка на окно
+
+    /* 
+    ===========================
+     Эффекты
+    ===========================
+    */
 
     // Обработчик клика вне модального окна
     useEffect(() => {
@@ -33,6 +46,20 @@ const ConfirmationModal = ({
         window.addEventListener('keydown', handleKeyPress);
         return () => window.removeEventListener('keydown', handleKeyPress);
     }, [onCancel]);
+
+    // Убираем скролл с перекрытой страницы
+    useEffect(() => {
+        if (isOpen) {
+            document.body.classList.add('no-scroll');
+            return () => document.body.classList.remove('no-scroll');
+        }
+    }, [isOpen]);
+
+    /* 
+    ===========================
+    Рендер
+    ===========================
+    */
 
     if (!isOpen) return null;
 

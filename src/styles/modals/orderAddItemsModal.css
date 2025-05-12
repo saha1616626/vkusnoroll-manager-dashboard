@@ -1,0 +1,133 @@
+/* Стили модального окна для добавления товара в заказ */
+
+/* Блокировка скролла */
+body.no-scroll {
+    overflow: hidden;
+}
+
+/* Основной оверлей модального окна */
+.order-add-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+}
+
+/* Контейнер модального окна */
+.order-add-modal {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 1000px;
+    padding: 24px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* Заголовок модалки */
+.order-add-modal-header {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Контейнер поиска и фильтра */
+.order-add-search-filter {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* Поле поиска */
+.order-add-search-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+/* Список товаров */
+.order-add-dishes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+    height: 400px;
+    overflow-y: auto;
+    margin-top: 40px;
+}
+
+/* Элемент товара */
+.order-add-dish-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Информация о товаре */
+.order-add-dish-info {
+    flex: 1;
+}
+
+/* Свойства товара (вес/объем/кол-во в наборе) */
+.order-add-dish-props {
+    display: flex;
+    gap: 10px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+/* Цена товара */
+.order-add-dish-price {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+/* Поле ввода количества */
+.order-add-quantity-input {
+    width: 70px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+}
+
+/* Контейнер кнопок */
+.order-add-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* Кнопки действий */
+.order-add-close-btn,
+.order-add-save-btn {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.order-add-close-btn {
+    background: #e0e0e0;
+}
+
+.order-add-save-btn {
+    background: #83D167;
+    color: white;
+}
+
+.order-add-save-btn:hover {
+    background: #6db356;
+}

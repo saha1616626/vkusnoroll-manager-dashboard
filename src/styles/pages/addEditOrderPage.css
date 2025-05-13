@@ -231,7 +231,6 @@
 /* Контейнер полей адреса доставки */
 .add-edit-order-address-fields {
     width: 400px;
-    /* padding: 25px; */
     background: white;
     overflow-y: auto;
 }
@@ -302,19 +301,21 @@
 }
 
 /* Кнопки управления товарами в таблице */
-.add-edit-order-products-header button {
-    margin-left: 10px;
-    padding: 6px 12px;
-    background: #83D167;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s;
+.add-edit-order-products-header-button-container {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
 }
 
-.add-edit-order-products-header button:hover {
-    background: #6db356;
+/* Иконка в кнопке */
+.add-edit-order-products-header-button-container button img {
+    width: 24px;
+    margin: -8px;
+}
+
+/* Если нет выбранных элементов для удаления */
+.add-edit-order-products-header-button-container button:disabled {
+    opacity: 0.7;
 }
 
 /* Сайдбар с итоговой информацией */

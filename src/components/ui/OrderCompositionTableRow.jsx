@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 
 const OrderCompositionTableRow = ({
-    key,
     row,
     rowIndex,
     columns,
@@ -51,16 +50,8 @@ const OrderCompositionTableRow = ({
             setDisplayPrice("");
             return;
         }
-        // Автодобавление "0." при начале с точки
-        const value = rawValue.startsWith(".") ? `0${rawValue}` : rawValue;
-        const numericValue = parseFloat(value) || 0;
-        const updatedRow = {
-            ...row,
-            pricePerUnit: numericValue,
-            sum: numericValue * (row.quantityOrder || 0)
-        };
-        onDataChange(updatedRow, rowIndex);
-        setDisplayPrice(rawValue); // Сохраняем сырое значение
+
+        setDisplayPrice(rawValue.startsWith(".") ? `0${rawValue}` : rawValue); // Сохраняем сырое значение
     };
 
     // Обработка количества
@@ -69,13 +60,7 @@ const OrderCompositionTableRow = ({
             setDisplayQuantity("");
             return;
         }
-        const numericValue = Math.max(0, parseInt(rawValue, 10) || 0);
-        const updatedRow = {
-            ...row,
-            quantityOrder: numericValue,
-            sum: (row.pricePerUnit || 0) * numericValue
-        };
-        onDataChange(updatedRow, rowIndex);
+
         setDisplayQuantity(rawValue);
     };
 
@@ -85,18 +70,8 @@ const OrderCompositionTableRow = ({
             setDisplaySum("");
             return;
         }
-        const value = rawValue.startsWith(".") ? `0${rawValue}` : rawValue;
-        const numericValue = parseFloat(value) || 0;
-        const newPrice = (row.quantityOrder && row.quantityOrder !== 0)
-            ? numericValue / row.quantityOrder
-            : 0; // Защита от деления на ноль
-        const updatedRow = {
-            ...row,
-            pricePerUnit: newPrice,
-            sum: numericValue
-        };
-        onDataChange(updatedRow, rowIndex);
-        setDisplaySum(rawValue);
+
+        setDisplaySum(rawValue.startsWith(".") ? `0${rawValue}` : rawValue);
     };
 
     // Нажатие на строку
@@ -153,6 +128,14 @@ const OrderCompositionTableRow = ({
                                 handlePriceChange(value);
                             }}
                             onBlur={() => {
+                                const numericValue = parseFloat(displayPrice) || 0;
+                                const updatedRow = {
+                                    ...row,
+                                    pricePerUnit: numericValue,
+                                    sum: numericValue * (row.quantityOrder || 0)
+                                };
+                                onDataChange(updatedRow, rowIndex);
+
                                 let finalValue = parseFloat(displayPrice) || 0;
                                 if (displayPrice === "" || displayPrice === ".") finalValue = 0; // Установка 0 при пустом поле
                                 handlePriceChange(finalValue.toFixed(2));
@@ -167,7 +150,20 @@ const OrderCompositionTableRow = ({
                                 const value = e.target.value.replace(/[^0-9]/g, '');
                                 handleQuantityChange(value);
                             }}
+                            style={{
+                                backgroundColor: (parseInt(displayQuantity, 10) === 0 ? '#ffe6e6' : 'white'),
+                                borderColor: (parseInt(displayQuantity, 10) === 0 ? '#ff4d4d' : '#d9d9d9'),
+                                outline: (parseInt(displayQuantity, 10) === 0 ? '1px solid  #ff4d4d' : '')
+                            }}
                             onBlur={() => {
+                                const numericValue = Math.max(0, parseInt(displayQuantity, 10) || 0);
+                                const updatedRow = {
+                                    ...row,
+                                    quantityOrder: numericValue,
+                                    sum: (row.pricePerUnit || 0) * numericValue
+                                };
+                                onDataChange(updatedRow, rowIndex);
+
                                 if (displayQuantity === "") handleQuantityChange("0");
                             }}
                             className="shopping-cart-table-input"
@@ -183,6 +179,17 @@ const OrderCompositionTableRow = ({
                                 handleSumChange(value);
                             }}
                             onBlur={() => {
+                                const numericValue = parseFloat(displaySum) || 0;
+                                const newPrice = (row.quantityOrder && row.quantityOrder !== 0)
+                                    ? numericValue / row.quantityOrder
+                                    : 0; // Защита от деления на ноль
+                                const updatedRow = {
+                                    ...row,
+                                    pricePerUnit: newPrice,
+                                    sum: (row.quantityOrder === 0 && row.pricePerUnit === 0) ? 0 : numericValue
+                                };
+                                onDataChange(updatedRow, rowIndex);
+
                                 let finalValue = parseFloat(displaySum) || 0;
                                 if (displaySum === "" || displaySum === ".") finalValue = 0;
                                 handleSumChange(finalValue.toFixed(2));

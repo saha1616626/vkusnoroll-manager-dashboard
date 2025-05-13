@@ -11,6 +11,7 @@ import './../../styles/ui/orderCompositionTable.css'
 const OrderCompositionTable = ({
     data = [],
     columns = ['select', 'Наименование', 'Категория', 'Цена', 'Количество', 'Сумма'], // Фиксированные колонки
+    externalSelected,
     onSelectionChange,
     onRowClick,
     onDataChange,
@@ -30,9 +31,6 @@ const OrderCompositionTable = ({
     const [draggedColumn, setDraggedColumn] = useState(null);
     const tableRef = useRef(null);
 
-
-    // const columns = ['select', 'Наименование', 'Категория', 'Цена', 'Количество', 'Сумма'];
-
     /* 
     ===========================
     Обработчики событий
@@ -48,21 +46,21 @@ const OrderCompositionTable = ({
 
     // Обработчки выделения всех строк
     const handleSelectAll = (e) => {
-        const newSelected = e.target.checked ?
-            new Set(data.map((item, index) => index)) : // Если есть выеделение, то отмечаем все элементы в таблице
-            new Set(); // Если нет выделения, то обнуляем все выделения в таблице
-        setSelectedRows(newSelected); // Сохраняем результат в переменную
-        onSelectionChange?.(Array.from(newSelected)); // Передаем массив выбранных объектов
+        const newSelected = e.target.checked ? data.map((_, index) => index) : [];
+        setSelectedRows(newSelected);
+        onSelectionChange?.(newSelected); // Передаем массив выбранных объектов
     };
 
     // Обработчки выделения строки
     const handleRowSelect = useCallback((index) => {
-        setSelectedRows(prev =>
-            prev.includes(index)
+        setSelectedRows(prev => {
+            const newSelection = prev.includes(index)
                 ? prev.filter(i => i !== index)
-                : [...prev, index]
-        );
-    }, []);
+                : [...prev, index];
+            onSelectionChange?.(newSelection); // Пробрасываем изменения наружу
+            return newSelection;
+        });
+    }, [onSelectionChange]);
 
     // Сохранение ширин
     const saveWidths = useCallback((widths) => {
@@ -104,6 +102,16 @@ const OrderCompositionTable = ({
     ===========================
     */
 
+    useEffect(() => {
+        if (externalSelected) setSelectedRows(externalSelected);
+    }, [externalSelected]);
+
+    useEffect(() => {
+        // Сбрасываем выделение при изменении данных
+        setSelectedRows([]);
+        onSelectionChange?.([]);
+    }, [data.length]); // eslint-disable-line react-hooks/exhaustive-deps 
+
     // Загрузка сохраненных ширин
     useEffect(() => {
         const savedWidths = localStorage.getItem(`cartTableWidths_${tableId}`);
@@ -144,7 +152,7 @@ const OrderCompositionTable = ({
                                 {column === 'select' ? (
                                     <input
                                         type="checkbox"
-                                        checked={selectedRows.size === data.length}
+                                        checked={selectedRows.length === data.length && data.length > 0}
                                         onChange={handleSelectAll}
                                         className="shopping-cart-table-checkbox"
                                     />
@@ -165,7 +173,7 @@ const OrderCompositionTable = ({
                 <tbody>
                     {data.map((row, rowIndex) => (
                         <OrderCompositionTableRow
-                            key={rowIndex}
+                            key={row.dishId}
                             row={row}
                             rowIndex={rowIndex}
                             columns={columns}

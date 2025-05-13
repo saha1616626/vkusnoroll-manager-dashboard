@@ -12,6 +12,7 @@ import OrderCompositionTable from '../ui/OrderCompositionTable'; // Таблиц
 import OrderAddItemsModal from '../modals/OrderAddItemsModal'; // Модальное окно для добавления товаров в заказ
 
 // Импорт иконок
+import deleteIcon from './../../assets/icons/delete.png'
 
 // Импорт стилей
 import './../../styles/pages/addEditOrderPage.css'
@@ -62,6 +63,8 @@ const AddEditOrderPage = ({ mode }) => {
 
     const [isAddressValid, setIsAddressValid] = useState(false); // Статус валидации адреса доставки
     const [showAddModal, setShowAddModal] = useState(false); // Управление отображением модального окна для добавления товара
+
+    const [selectedRows, setSelectedRows] = useState([]); // Выбранные строки в таблице
 
     /* 
     ==============================
@@ -219,11 +222,6 @@ const AddEditOrderPage = ({ mode }) => {
         setOrderItems(newData);
     };
 
-    // Выбор строк в таблице
-    const setSelectedRows = (selectedId) => {
-
-    };
-
     // Обработчик сохранения данных из модального окна OrderAddItemsModal
     const handleSaveItems = (selectedItems) => {
         setOrderItems(prev => {
@@ -238,7 +236,8 @@ const AddEditOrderPage = ({ mode }) => {
                     // Обновляем существующий товар
                     updatedItems[existingIndex] = {
                         ...updatedItems[existingIndex],
-                        quantityOrder: newItem.quantity
+                        quantityOrder: newItem.quantity,
+                        sum: newItem.quantity * newItem.originalPrice
                     };
                 } else {
                     // Добавляем новый товар
@@ -262,6 +261,21 @@ const AddEditOrderPage = ({ mode }) => {
             );
         });
         setShowAddModal(false);
+    };
+
+    // Выбор строк в таблице
+    const handleSelectionChange = (selectedIds) => {
+        setSelectedRows(selectedIds);
+    };
+
+    // Удаление строк в таблице
+    const handleDeleteSelected = () => {
+        // Удаление по индексам в обратном порядке
+        const newItems = [...orderItems].filter(
+            (_, index) => !selectedRows.includes(index)
+        );
+        setOrderItems(newItems);
+        setSelectedRows([]);
     };
 
     /* 
@@ -512,15 +526,29 @@ const AddEditOrderPage = ({ mode }) => {
                     <section className="add-edit-order-section">
                         <div className="add-edit-order-products-header">
                             <h3 className="add-edit-order-subtitle">Товары в заказе</h3>
-                            <button onClick={() => setShowAddModal(true)}>Добавить</button>
-                            <button>Удалить</button>
+                            <div className="add-edit-order-products-header-button-container">
+                                <button
+                                    className="button-control"
+                                    onClick={handleDeleteSelected}
+                                    disabled={selectedRows.length === 0}
+                                >
+                                    <img src={deleteIcon} alt="Delete" />
+                                </button>
+                                <button
+                                    className="button-control"
+                                    onClick={() => setShowAddModal(true)}
+                                >
+                                    Добавить
+                                </button>
+                            </div>
                         </div>
 
                         {/* Таблица */}
                         <div className="add-edit-order-products-table">
                             <OrderCompositionTable
                                 data={orderItems}
-                                onSelectionChange={setSelectedRows}
+                                onSelectionChange={handleSelectionChange}
+                                selectedRows={selectedRows}
                                 onDataChange={handleOrderItemsChange}
                                 tableId={pageId}
                             />
@@ -535,17 +563,17 @@ const AddEditOrderPage = ({ mode }) => {
 
                         <div className="add-edit-order-summary-row">
                             <span>Сумма товаров:</span>
-                            <span>0 ₽</span>
+                            <span>{total} ₽</span>
                         </div>
 
                         <div className="add-edit-order-summary-row">
                             <span>Доставка:</span>
-                            <span>0 ₽</span>
+                            <span>{formData.deliveryCost || 0} ₽</span>
                         </div>
 
                         <div className="add-edit-order-summary-total">
                             <span>Итого:</span>
-                            <span>0 ₽</span>
+                            <span>{total + (formData.deliveryCost || 0)} ₽</span>
                         </div>
                     </section>
                 </div>

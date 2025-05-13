@@ -31,7 +31,7 @@ const DropdownStatusSelection = ({ pageId, onStatusChange }) => {
     // Загрузка статусов из БД
     useEffect(() => {
         const loadStatuses = async () => {
-            try {
+            try { 
                 const response = await api.getOrderStatuses();
                 const dbStatuses = response.data;
 

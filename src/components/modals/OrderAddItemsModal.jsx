@@ -50,6 +50,7 @@ const OrderAddItemsModal = ({ isOpen, onCancel, onSave, existingItems = [] }) =>
 
     // Загрузка данных
     useEffect(() => {
+        if (!isOpen) return;
         const fetchDishes = async () => {
             try {
                 // Получение списка блюд без изображения и те товары, которые не в архиве, и их категория не в архиве
@@ -62,16 +63,25 @@ const OrderAddItemsModal = ({ isOpen, onCancel, onSave, existingItems = [] }) =>
             }
         };
         fetchDishes();
-    }, []);
+    }, [isOpen]);
 
     // Инициализация количеств на основе существующих товаров
     useEffect(() => {
-        const initialQuantities = {};
+        if (!isOpen || !dishes.length) return;
+
+        // Создаем объект с 0 для всех блюд
+        const initialQuantities = dishes.reduce((acc, dish) => {
+            acc[dish.id] = 0;
+            return acc;
+        }, {});
+
+        // Перезаписываем значения для существующих товаров
         existingItems.forEach(item => {
             initialQuantities[item.dishId] = item.quantityOrder;
         });
+
         setQuantities(initialQuantities);
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps 
+    }, [dishes]); // eslint-disable-line react-hooks/exhaustive-deps 
 
     // Инициализация фильтров
     useEffect(() => {
@@ -224,9 +234,10 @@ const OrderAddItemsModal = ({ isOpen, onCancel, onSave, existingItems = [] }) =>
 
     // Обработчик изменения количества
     const handleQuantityChange = (dishId, value) => {
+        // Храним null вместо пустой строки для корректной работы ?? 
         setQuantities(prev => ({
             ...prev,
-            [dishId]: Number(value) || 0
+            [dishId]: value === "" ? null : Math.max(0, Number(value))
         }));
     };
 
@@ -294,26 +305,61 @@ const OrderAddItemsModal = ({ isOpen, onCancel, onSave, existingItems = [] }) =>
                 </div>
 
                 {/* Список товаров */}
-                <div className="order-add-dishes-list">
+                <div className="order-add-items-modal-list">
                     {filteredDishes.map(dish => (
-                        <div key={dish.id} className="order-add-dish-item">
-                            <div className="order-add-dish-info">
-                                <h4>{dish.name}</h4>
-                                <h4>{dish.category}</h4>
-                                <div className="order-add-dish-props">
-                                    {dish.isWeight && <span>{dish.weight} г</span>}
-                                    {dish.isVolume && <span>{dish.volume} мл</span>}
-                                    {dish.isQuantitySet && <span>{dish.quantity} шт</span>}
+                        <div key={dish.id} className="order-add-items-modal-item">
+                            <div className="order-add-items-modal-main">
+                                {/* Название и категория в одной строке */}
+                                <div className="order-add-items-modal-header">
+                                    <h4 className="order-add-items-modal-title">{dish.name}</h4>
+                                    <span className="order-add-items-modal-category">{dish.category}</span>
+
+                                    <div className="order-add-items-modal-props">
+                                        {dish.isWeight && <span>{dish.weight}г</span>}
+                                        {dish.isVolume && <span>{dish.volume}мл</span>}
+                                        {dish.isQuantitySet && <span>{dish.quantity}шт</span>}
+                                    </div>
                                 </div>
-                                <div className="order-add-dish-price">{dish.price} ₽</div>
+
+                                {/* Свойства и цена в одной строке */}
+                                <div className="order-add-items-modal-details">
+                                    <div className="order-add-items-modal-price">{dish.price} ₽</div>
+                                </div>
                             </div>
-                            <input
-                                type="number"
-                                min="0"
-                                value={quantities[dish.id] || ''}
-                                onChange={(e) => handleQuantityChange(dish.id, e.target.value)}
-                                className="order-add-quantity-input"
-                            />
+
+                            <div className="order-add-items-modal-quantity">
+                                <button
+                                    className="order-add-items-modal-quantity-btn"
+                                    onClick={() => handleQuantityChange(dish.id, Math.max(0, (quantities[dish.id] || 0) - 1))}
+                                >
+                                    <svg width="14" height="2" viewBox="0 0 14 2" fill="none">
+                                        <path d="M0 1H14" stroke="currentColor" strokeWidth="2" />
+                                    </svg>
+                                </button>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={quantities[dish.id] ?? ""}
+                                    onChange={(e) => handleQuantityChange(dish.id, e.target.value)}
+                                    onBlur={(e) => {
+                                        // Принудительно устанавливаем 0 для пустых значений
+                                        if (e.target.value === "" || isNaN(quantities[dish.id])) {
+                                            setQuantities(prev => ({
+                                                ...prev,
+                                                [dish.id]: 0
+                                            }));
+                                        }
+                                    }}
+                                />
+                                <button
+                                    className="order-add-items-modal-quantity-btn"
+                                    onClick={() => handleQuantityChange(dish.id, (quantities[dish.id] || 0) + 1)}
+                                >
+                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                        <path d="M6 0H8V6H14V8H8V14H6V8H0V6H6V0Z" fill="currentColor" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -340,4 +386,5 @@ const OrderAddItemsModal = ({ isOpen, onCancel, onSave, existingItems = [] }) =>
         document.body // Рендерим портал в body, чтобы избежать проблем со стилями
     );
 }
+
 export default OrderAddItemsModal;

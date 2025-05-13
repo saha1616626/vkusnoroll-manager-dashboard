@@ -22,6 +22,7 @@ body.no-scroll {
 
 /* Контейнер модального окна */
 .order-add-modal {
+    /* border: 10px solid white; Цвет рамки */
     background: white;
     border-radius: 12px;
     width: 90%;
@@ -29,6 +30,26 @@ body.no-scroll {
     padding: 24px;
     max-height: 80vh;
     overflow-y: auto;
+    /* Обрезка содержимого */
+    clip-path: inset(0 0 0 0 round 12px);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Стилизация скроллбара */
+.order-add-modal::-webkit-scrollbar {
+    width: 10px;
+    background: transparent;
+}
+
+.order-add-modal::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.order-add-modal::-webkit-scrollbar-thumb:hover {
+    background: #ccc;
 }
 
 /* Заголовок модалки */
@@ -54,55 +75,156 @@ body.no-scroll {
     border-radius: 8px;
 }
 
-/* Список товаров */
-.order-add-dishes-list {
+/* Основной контейнер списка товаров */
+.order-add-items-modal-list {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    margin-bottom: 20px;
-    height: 400px;
+    gap: 12px;
+    margin: 20px 0;
+    max-height: 50vh;
     overflow-y: auto;
-    margin-top: 40px;
+    padding-right: 8px;
 }
 
-/* Элемент товара */
-.order-add-dish-item {
+/* Элемент списка товаров */
+.order-add-items-modal-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid #eee;
+    padding: 0px 16px;
+    min-height: 72px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
+    gap: 16px;
 }
 
-/* Информация о товаре */
-.order-add-dish-info {
-    flex: 1;
+.order-add-items-modal-item:hover {
+    transform: translateX(1px);
 }
 
-/* Свойства товара (вес/объем/кол-во в наборе) */
-.order-add-dish-props {
+/* Основной информационный блок */
+.order-add-items-modal-main {
     display: flex;
-    gap: 10px;
-    color: #666;
-    font-size: 0.9em;
+    flex: 1;
+    min-width: 0;
+    /* Для корректного обрезания текста */
+    justify-content: space-between;
+}
+
+/* Заголовок, категория и свойства */
+.order-add-items-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Название товара с обрезкой */
+.order-add-items-modal-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #2d3436;
+    max-width: 240px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Категория товара */
+.order-add-items-modal-category {
+    font-size: 12px;
+    color: #636e72;
+    background: #f8f9fa;
+    padding: 2px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+/* Детали (цена) */
+.order-add-items-modal-details {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* Свойства товара */
+.order-add-items-modal-props {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: #636e72;
+}
+
+.order-add-items-modal-props span {
+    display: inline-block;
+    padding: 2px 6px;
+    background: #f8f9fa;
+    border-radius: 4px;
 }
 
 /* Цена товара */
-.order-add-dish-price {
-    font-weight: bold;
-    color: #2c3e50;
+.order-add-items-modal-price {
+    font-size: 14px;
+    font-weight: 700;
+    /* color: #00b894; */
+    flex-shrink: 0;
+}
+
+/* Адаптивный контейнер управления количеством */
+.order-add-items-modal-quantity {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    border-radius: 6px;
+    padding: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Поле ввода количества */
-.order-add-quantity-input {
-    width: 70px;
-    padding: 5px;
-    border: 1px solid #ddd;
+.order-add-items-modal-quantity input {
+    width: 50px;
+    padding: 6px;
+    border: 1px solid #dfe6e9;
     border-radius: 4px;
     text-align: center;
+    font-size: 14px;
+    transition: border-color 0.2s;
 }
 
-/* Контейнер кнопок */
+.order-add-items-modal-quantity input:focus {
+    border-color: #00b894;
+    outline: none;
+}
+
+/* Кнопки изменения количества */
+.order-add-items-modal-quantity-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: #00b894;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.order-add-items-modal-quantity-btn:hover {
+    background: #00b894;
+    transform: scale(1.05);
+}
+
+/* Иконки кнопок */
+.order-add-items-modal-quantity-btn svg {
+    pointer-events: none;
+}
+
+/* Контейнер кнопок в нижней части окна */
 .order-add-modal-actions {
     display: flex;
     gap: 10px;

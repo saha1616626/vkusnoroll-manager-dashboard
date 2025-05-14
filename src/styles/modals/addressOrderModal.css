@@ -1,0 +1,350 @@
+/* Стили модального окна для управления адресом в заказе */
+
+/* Блокировка скролла */
+body.no-scroll {
+    overflow: hidden;
+}
+
+/* Пространство за модальным окном */
+.address-order-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    backdrop-filter: blur(1px);
+}
+
+/* Модальное окно */
+.address-order-modal-container {
+    background: white;
+    width: 90%;
+    max-width: 1200px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    display: flex;
+    min-height: 600px;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+/* Модальное окно запущено */
+.address-order-modal-container.active {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Анимация появления */
+    animation: modalAppear 0.3s ease;
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+}
+
+/* Анимация появления */
+@keyframes modalAppear {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Крестик закрыть форму */
+.address-order-modal-close-button {
+    position: absolute;
+    left: 90.5%;
+    top: 9%;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    transition: color 0.3s;
+    z-index: 1000;
+    padding: 1px 8px;
+    opacity: 0.7;
+    border-radius: 10px;
+    background-color: white;
+}
+
+.address-order-modal-close-button img {
+    margin-bottom: 0.5px;
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    /* Пропорция формы */
+}
+
+.address-order-modal-close-button:hover {
+    transform: translateY(-2px);
+    opacity: 1;
+}
+
+/* Левая часть окна - поля */
+.address-order-modal-sidebar {
+    width: 400px;
+    background: #f8f9fa;
+    padding: 25px;
+    border-right: 1px solid #e9ecef;
+    overflow-y: auto;
+}
+
+/* Форма добавления и редактирования адреса */
+.address-order-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    justify-content: space-between;
+    height: 100%;
+}
+
+/* Заголовок формы */
+.address-order-modal-form-title {
+    font-size: 24px;
+    font-weight: 600;
+    font-style: italic;
+    margin-bottom: 1rem;
+    color: #2d3436;
+    text-align: center;
+}
+
+/* Группа поля и названия */
+.address-order-modal-form-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Название поля */
+.address-order-modal-form-input-group label {
+    font-size: 14px;
+    color: #636e72;
+    font-weight: 500;
+}
+
+/* Поля ввода */
+.address-order-modal-form-input {
+    padding: 12px 16px;
+    border: 1px solid #dfe6e9;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s;
+    margin-bottom: 10px;
+}
+
+.address-order-modal-form-input:focus {
+    outline: none;
+    border-color: #74b9ff;
+    box-shadow: 0 0 0 2px rgba(116, 185, 255, 0.2);
+}
+
+/* Список предложений поиска */
+.address-order-modal-form-suggestions-list {
+    position: absolute;
+    width: calc(100% - 0px);
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    max-height: 200px;
+    max-width: 400px;
+    overflow-y: auto;
+}
+
+/* Адрес предложения поиска */
+.address-order-modal-form-suggestion-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 14px;
+}
+
+.address-order-modal-form-suggestion-item:hover {
+    background: #f8f9fa;
+}
+
+.address-order-modal-form-suggestion-item:not(:last-child) {
+    border-bottom: 1px solid #eee;
+}
+
+/* Дополнительные поля адреса */
+.address-order-modal-form-extra-fields {
+    margin-top: 0px;
+    display: flex;
+    flex-direction: column;
+}
+
+.address-order-modal-form-extra-fields input,
+.address-order-modal-form-extra-fields textarea {
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+.address-order-modal-form-extra-fields textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Чек-бокс */
+.address-order-modal-form-checkbox-group {
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.address-order-modal-form-checkbox-group input {
+    width: 20px;
+    height: 20px;
+    accent-color: #74b9ff;
+}
+
+/* Заголовок чекбокса */
+.address-order-modal-form-checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-size: 14px;
+    color: #636e72;
+    font-weight: 500;
+}
+
+/* Группа кнопок */
+.address-order-modal-form-btn-group {
+    display: flex;
+    gap: 1.0rem;
+}
+
+/* Кнопка сохранения */
+.address-order-modal-form-save-btn {
+    width: 100%;
+    padding: 14px;
+    background: #20b92d;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
+    /* Плавные переходы */
+    margin-top: 20px;
+}
+
+.address-order-modal-form-save-btn:disabled {
+    background: #dfe6e9;
+    cursor: not-allowed;
+}
+
+.address-order-modal-form-save-btn:hover:not(:disabled) {
+    background: #189924;
+    transform: translateY(-2px);
+    /* Лёгкий эффект подъёма при наведении */
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+    /* Тень становится более выраженной */
+}
+
+/* Кнопка назад */
+.address-order-modal-form-back-btn {
+    width: 100%;
+    padding: 14px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
+    /* Плавные переходы */
+    margin-top: 20px;
+}
+
+.address-order-modal-form-back-btn:hover {
+    background: #5a6268;
+    /* Более темный серый цвет при наведении */
+    transform: translateY(-2px);
+    /* Лёгкий эффект подъёма при наведении */
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+    /* Тень становится более выраженной */
+}
+
+.address-order-modal-form-back-btn:active {
+    transform: translateY(1px);
+    /* Эффект нажатия */
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+    /* Уменьшаем тень при нажатии */
+}
+
+/* Карта для режима AddEdit */
+.address-order-modal-map-v1 {
+    flex-grow: 1;
+    height: 600px;
+    background: #f8f9fa;
+    overflow: hidden;
+    background: #f0f0f0;
+}
+
+/* Уведомления внутри модального окна */
+
+/* Контейнер */
+.address-order-modal-notifications {
+    position: fixed;
+    top: 1.5%;
+    /* Если сделать bottom без контроля высоты, то он может в прозрачном состоянии 
+    перекрыть контент и при нажатии на него модальное окно закроется, так как 
+    уведомления не входят в состав модального окна и ссылка на них не распространяется */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1100;
+}
+
+/* Сообщение */
+.address-order-modal-notification {
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 14px 28px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    animation: modalNotificationSlide 0.3s ease-out;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    backdrop-filter: blur(5px);
+}
+
+/* Стили для ошибки зоны доставки */
+.address-order-modal-zone-error {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(12%);
+    background: #fee;
+    border: 1px solid #ff4444;
+    color: #d8000c;
+    padding: 14px 20px 14px 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 15px rgba(255, 68, 68, 0.15);
+    z-index: 1000;
+    animation: modalAppear 0.3s ease;
+    font-weight: 500;
+    backdrop-filter: blur(2px);
+    border-left: 4px solid #ff4444;
+}
+
+/* Иконка */
+.address-order-modal-zone-error-icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
+}

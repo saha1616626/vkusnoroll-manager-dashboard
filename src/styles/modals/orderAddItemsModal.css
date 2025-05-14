@@ -16,7 +16,7 @@ body.no-scroll {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 10;
     backdrop-filter: blur(2px);
 }
 
@@ -38,6 +38,27 @@ body.no-scroll {
     flex-direction: column;
     justify-content: space-between;
 
+}
+
+/* Модальное окно запущено */
+.order-add-modal.active {
+    /* Анимация появления */
+    animation: modalAppear 0.3s ease;
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+}
+
+/* Анимация появления */
+@keyframes modalAppear {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 /* Стилизация скроллбара */
@@ -284,4 +305,34 @@ body.no-scroll {
 
 .order-add-save-btn:hover {
     background-color: #3e9b1d;
+}
+
+/* Крестик закрыть форму */
+.order-add-modal-close-button {
+    position: absolute;
+    left: 85.5%;
+    top: 6.5%;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    transition: color 0.3s;
+    z-index: 1000;
+    padding: 1px 8px;
+    opacity: 0.7;
+    border-radius: 10px;
+    background-color: white;
+}
+
+.order-add-modal-close-button img {
+    margin-bottom: 0.5px;
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    /* Пропорция формы */
+}
+
+.order-add-modal-close-button:hover {
+    transform: translateY(-2px);
+    opacity: 1;
 }

@@ -10,6 +10,7 @@ import api from '../../utils/api';  // API сервера
 import { useDebounce } from '../Hooks/useDebounce'; // Задержка поиска
 import OrderCompositionTable from '../ui/OrderCompositionTable'; // Таблица для манипуляций над составом заказов
 import OrderAddItemsModal from '../modals/OrderAddItemsModal'; // Модальное окно для добавления товаров в заказ
+import AddressOrderModal from '../modals/AddressOrderModal'; // Модальное окно для управления адресом
 
 // Импорт иконок
 import deleteIcon from './../../assets/icons/delete.png'
@@ -62,8 +63,9 @@ const AddEditOrderPage = ({ mode }) => {
     const [localNotifications, setLocalNotifications] = useState([]); // Уведомления
 
     const [isAddressValid, setIsAddressValid] = useState(false); // Статус валидации адреса доставки
+    const [showAddressOrderModal, setShowAddressOrderModal] = useState(false); // Управление отображением модального окна для управления адресом доставки
+    const [modeAddressOrderModal, setModeAddressOrderModal] = useState('AddEdit'); // Режим отображения модального окна
     const [showAddModal, setShowAddModal] = useState(false); // Управление отображением модального окна для добавления товара
-
     const [selectedRows, setSelectedRows] = useState([]); // Выбранные строки в таблице
 
     /* 
@@ -410,103 +412,77 @@ const AddEditOrderPage = ({ mode }) => {
                     {/* Блок доставки */}
                     <section className="add-edit-order-section">
                         <h2 className="add-edit-order-subtitle">Доставка</h2>
-                        <div className="add-edit-order-map-container">
-                            {/* Левая часть - поля адреса */}
-                            <div className="add-edit-order-address-fields">
-                                <div className="add-edit-order-input-group">
-                                    <label className="add-edit-order-field-label">Город, улица, дом</label>
-                                    <input
-                                        maxLength="100"
-                                        type="text"
-                                        // value={searchQuery}
-                                        // onChange={(e) => setSearchQuery(e.target.value)}
-                                        // onFocus={() => setSuggestionsShow(true)} // При нажатии на поле открываются подсказки поиска
-                                        // onBlur={() => setTimeout(() => setSuggestionsShow(false), 200)}
-                                        placeholder="Введите адрес..."
-                                        className="add-edit-order-input "
-                                        style={{ width: 'calc(100% - 33.6px)' }}
-                                    />
-                                </div>
 
-                                {/* Дополнительные поля адреса */}
-                                <div className="add-edit-order-extra-fields">
-                                    <div className="add-edit-order-checkbox-group">
-                                        <label>
-                                            <input
-                                                type="checkbox"
-                                                checked={formData.address.isPrivateHome}
-                                                onChange={(e) => {
-                                                    e.stopPropagation(); // Предотвращает случайную активацию других обработчиков
-                                                    setFormData(prev => ({
-                                                        ...prev,
-                                                        address: {
-                                                            ...prev.address,
-                                                            isPrivateHome: e.target.checked,
-                                                            entrance: '',
-                                                            floor: '',
-                                                            apartment: ''
-                                                        }
-                                                    }));
-                                                }}
-                                            />
-                                            Частный дом
-                                        </label>
-                                    </div>
+                        <div className="order-page-form-group">
+                            {/* Блок адреса */}
+                            <div className="add-edit-order-input-group">
+                                <label>Адрес доставки</label>
 
-                                    {!formData.isPrivateHome && (
-                                        <>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-                                                <div className="add-edit-order-input-group">
-                                                    <label>Подъезд</label>
-                                                    <input
-                                                        maxLength="10"
-                                                        className="add-edit-order-input"
-                                                        placeholder=""
-                                                        value={formData.address.entrance}
-                                                        onChange={(e) => handleAddressChange('entrance', e.target.value)}
-                                                    />
+                                {/* {selectedAddress ? ( */}
+                                {/* <div className="order-address-card" title={!isAddressValid ? 'Изменилась зона доставки. Пожалуйста, обновите адрес.' : null}> */}
+                                {/* <div className={`order-address-content ${!isAddressValid ? 'invalid' : ''}`}> */}
+                                {/* <p className="order-address-main"> */}
+                                {/* {selectedAddress.city}, {selectedAddress.street} {selectedAddress.house}
+                                                {selectedAddress.isPrivateHome && (
+                                                    <span className="order-address-private">Частный дом</span>
+                                                )} */}
+                                {/* </p> */}
+                                {/* {(selectedAddress.apartment && !selectedAddress.isPrivateHome) && (
+                                                <div className="order-address-details">
+                                                    <div>Подъезд: {selectedAddress.entrance}</div>
+                                                    <div>Этаж: {selectedAddress.floor}</div>
+                                                    <div>Квартира: {selectedAddress.apartment}</div>
                                                 </div>
-                                                <div className="add-edit-order-input-group">
-                                                    <label>Этаж</label>
-                                                    <input
-                                                        maxLength="10"
-                                                        className="add-edit-order-input"
-                                                        placeholder=""
-                                                        value={formData.address.floor}
-                                                        onChange={(e) => handleAddressChange('floor', e.target.value)}
-                                                    />
-                                                </div>
-
-                                                <div className="add-edit-order-input-group">
-                                                    <label>Квартира</label>
-                                                    <input
-                                                        maxLength="10"
-                                                        className="add-edit-order-input"
-                                                        placeholder=""
-                                                        value={formData.address.apartment}
-                                                        onChange={(e) => handleAddressChange('apartment', e.target.value)}
-                                                    />
-                                                </div>
-                                            </div>
-
-                                        </>
-                                    )}
-
-                                    <div className="add-edit-order-input-group">
-                                        <label>Комментарий</label>
-                                        <textarea
-                                            placeholder=""
-                                            maxLength="300"
-                                            value={formData.address.comment}
-                                            onChange={(e) => handleAddressChange('comment', e.target.value)}
-                                            style={{ padding: '10px' }} />
-                                    </div>
-
-                                </div>
+                                            )} */}
+                                {/* </div> */}
+                                {/* {!isAddressValid && (
+                                            // <div className="address-validation-error">
+                                            //     Адрес вне зоны доставки
+                                            // </div>
+                                        )} */}
+                                {/* <button
+                                            className="order-address-more"
+                                            onClick={() => {
+                                                window.addEventListener('address-updated', handleAddressUpdate);
+                                                openModal('list');
+                                            }}>
+                                            <img src={moreIcon} alt="Изменить" width={16} />
+                                        </button> */}
+                                {/* // </div> */}
+                                {/* ) : ( */}
+                                <button
+                                    className="add-edit-order-add-address"
+                                    onClick={() => {
+                                        setShowAddressOrderModal(true);
+                                        setModeAddressOrderModal('AddEdit');
+                                    }}
+                                >
+                                    + Добавить адрес доставки
+                                </button>
+                                {/* )} */}
+                                {/* {!selectedAddress && errors.address && (
+                                    <span className="error-message">Выберите адрес доставки</span>
+                                )} */}
                             </div>
 
-                            {/* Правая часть - карта */}
-                            <div id="add-edit-order-map" className="add-edit-order-map" />
+                            {/* Блок даты и времени */}
+                            <div className="order-page-input-group">
+                                {/* <label className="order-page-label">Дата и время доставки</label> */}
+                                <div className="order-delivery-time-group">
+                                    <button
+                                        className="order-page-time-select-btn"
+                                    // onClick={() => setIsTimeModalOpen(true)}
+                                    >
+                                        {/* <img src={calendarIcon} alt="Календарь" width={20} />
+                                        {deliveryDate && deliveryTime
+                                            ? `${new Date(deliveryDate).toLocaleDateString('ru-RU')} ${deliveryTime}`
+                                            : "Выбрать дату и время"} */}
+                                    </button>
+                                </div>
+                                {errors.datetime && (
+                                    <span className="error-message">Выберите дату и время доставки</span>
+                                )}
+                            </div>
                         </div>
 
                         <div className="add-edit-order-delivery-price">
@@ -578,6 +554,13 @@ const AddEditOrderPage = ({ mode }) => {
                     </section>
                 </div>
             </div>
+
+            {/* Модальное окно для управления адресом */}
+            <AddressOrderModal
+                mode={modeAddressOrderModal} 
+                isOpen={showAddressOrderModal}
+                onCancel={() => setShowAddressOrderModal(false)}
+            />
 
             {/* Модальное окно для добавления товаров в заказ */}
             <OrderAddItemsModal

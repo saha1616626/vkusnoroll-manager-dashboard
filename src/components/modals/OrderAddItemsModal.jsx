@@ -12,6 +12,7 @@ import FilterMenu from '../ui/FilterMenu'; // Меню фильтра
 import RefreshButton from '../../components/dynamic/RefreshButton';
 
 // Импорт иконок
+import crossIcon from './../../assets/icons/cross.png'; // Крестик
 
 // Импорт стилей
 import './../../styles/modals/orderAddItemsModal.css'
@@ -299,10 +300,10 @@ const OrderAddItemsModal = ({ isOpen, onCancel, onSave, existingItems = [] }) =>
         setIsLoading(true);
         try {
             searchInputRef.current?.clear(); // Очистка поля поиска
-
             setSearchQuery('');
+
             setFilterState({ ...filterState, formData: {} });
-            saveFilterState(filterState);
+            saveFilterState({ ...filterState, formData: {} });
             setActiveFilters({});
         } catch (error) {
             console.error('Filter reset error:', error);
@@ -383,8 +384,16 @@ const OrderAddItemsModal = ({ isOpen, onCancel, onSave, existingItems = [] }) =>
 
     return ReactDOM.createPortal(
         <div className="order-add-modal-overlay">
-            <div className="order-add-modal" ref={modalRef}>
 
+            <button
+                onClick={() => onCancel()}
+                className="order-add-modal-close-button"
+                aria-label="Закрыть форму"
+            >
+                <img src={crossIcon} alt="Cross" />
+            </button>
+
+            <div className={`order-add-modal ${isOpen ? 'active' : ''}`} ref={modalRef}>
                 <div style={{ display: 'flex', flexDirection: 'column', height: '100%', alignContent: 'flex-start' }}>
                     <div className="control-components order-add-modal-header-container">
 

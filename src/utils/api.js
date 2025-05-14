@@ -45,7 +45,7 @@ const apiMethods = {
 
     // Заказы
     getOrders: (params) =>
-        api.get('/orders/manager/all', {params}), // Получение всех заказов с пагинацией
+        api.get('/orders/manager/all', { params }), // Получение всех заказов с пагинацией
 
     // Статусы заказов
     getOrderStatuses: () => api.get('/orderStatuses'),
@@ -55,6 +55,10 @@ const apiMethods = {
 
     // Список блюд
     getUnarchivedDishesNoImageWithActiveCategory: () => api.get('/dishes/available-no-image'), // Получение списка блюд без изображения и те товары, которые не в архиве, и их категория не в архиве
+
+    // Настройки доставки
+    getDeliveryZones: () => api.get('/deliverySettings/delivery-zones'), // Зоны доставки
+    getOrderSettings: () => api.get('/deliverySettings/order-settings'), // Получаем все необходимые данные для формирования заказа
 
 };
 

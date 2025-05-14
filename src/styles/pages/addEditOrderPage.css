@@ -205,81 +205,26 @@
     /* Игнорирует клики */
 }
 
-/* Блок с картой и полями адреса */
-.add-edit-order-map-container {
-    display: flex;
-    gap: 2rem;
-    /* background: #f8f9fa; */
-    overflow: hidden;
-    margin-bottom: 1.5rem;
+/* -------------- */
+/* Адрес доставки */
+/* -------------- */
+
+/* Кнопка для добавления адреса, если он не выбран */
+.add-edit-order-add-address {
     width: 100%;
-    min-height: 500px;
-}
-
-/* Карта */
-.add-edit-order-map {
-    flex-grow: 1;
-    height: 500px;
-    background: #f0f0f0;
-
-    /* Закругление только для карты */
-    border-radius: 12px;
-    overflow: hidden;
-    /* Важно для обрезки углов */
-}
-
-/* Контейнер полей адреса доставки */
-.add-edit-order-address-fields {
-    width: 400px;
-    background: white;
-    overflow-y: auto;
-}
-
-/* Поля для ввода адреса */
-
-/* Дополнительные поля адресе */
-.add-edit-order-extra-fields {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-top: 1.5rem;
-}
-
-.add-edit-order-extra-fields input,
-.add-edit-order-extra-fields textarea {
-    border: 1px solid #e9ecef;
-    border-radius: 6px;
-    font-size: 14px;
-    transition: border-color 0.3s;
-}
-
-.add-edit-order-extra-fields textarea {
-    resize: vertical;
-    min-height: 80px;
-}
-
-/* Чек-бокс "Частный дом" */
-.add-edit-order-checkbox-group {
-    margin-top: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-/* Поле чекбокса */
-.add-edit-order-checkbox-group input {
-    width: 20px;
-    height: 20px;
-    accent-color: #74b9ff;
-}
-
-/* Заголовок чекбокса */
-.add-edit-order-checkbox-group label {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    cursor: pointer;
-    font-size: 14px;
+    padding: 12px;
+    background: #f8f9fa;
+    border: 2px dashed #dfe6e9;
+    border-radius: 8px;
     color: #636e72;
-    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.add-edit-order-add-address:hover {
+    background: #f1f3f5;
+    border-color: #74b9ff;
+    color: #2d3436;
 }
 
 /* Поле стоимости доставки */
@@ -295,7 +240,10 @@
     flex: 1;
 }
 
+/* --------------- */
 /* Таблица товаров */
+/* --------------- */
+
 .add-edit-order-products-table {
     margin-top: 0.8rem;
 }
@@ -361,23 +309,6 @@
     /* Сайдбар с итоговой информацией */
     .add-edit-order-sidebar {
         position: static;
-    }
-
-    /* Блок с картой и полями адреса */
-    .add-edit-order-map-container {
-        flex-direction: column;
-    }
-
-    /* Контейнер полей адреса доставки */
-    .add-edit-order-address-fields {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid #e9ecef;
-    }
-
-    /* Карта */
-    .add-edit-order-map {
-        height: 400px;
     }
 }
 

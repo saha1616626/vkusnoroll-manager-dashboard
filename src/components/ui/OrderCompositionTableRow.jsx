@@ -186,7 +186,9 @@ const OrderCompositionTableRow = ({
                                 const updatedRow = {
                                     ...row,
                                     pricePerUnit: newPrice,
-                                    sum: (row.quantityOrder === 0 && row.pricePerUnit === 0) ? 0 : numericValue
+                                    sum: (row.quantityOrder === 0 || row.pricePerUnit === 0) ? 0
+                                        // Устанавливаем не numericValue, а при повторном пересчете цена * кол-во, чтобы получить правильное округление.
+                                        : (newPrice.toFixed(2) * row.quantityOrder)
                                 };
                                 onDataChange(updatedRow, rowIndex);
 

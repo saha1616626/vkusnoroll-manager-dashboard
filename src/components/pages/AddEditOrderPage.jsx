@@ -525,7 +525,7 @@ const AddEditOrderPage = ({ mode }) => {
                     {/* Товары */}
                     <section className="add-edit-order-section">
                         <div className="add-edit-order-products-header">
-                            <h3 className="add-edit-order-subtitle">Товары в заказе</h3>
+                            <h3 className="add-edit-order-subtitle">Позиции в заказе</h3>
                             <div className="add-edit-order-products-header-button-container">
                                 <button
                                     className="button-control"

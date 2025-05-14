@@ -29,10 +29,15 @@ body.no-scroll {
     max-width: 1000px;
     padding: 24px;
     max-height: 80vh;
+    min-height: 80vh;
     overflow-y: auto;
     /* Обрезка содержимого */
     clip-path: inset(0 0 0 0 round 12px);
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
 }
 
 /* Стилизация скроллбара */
@@ -52,27 +57,18 @@ body.no-scroll {
     background: #ccc;
 }
 
+/* Контейнер заголовка */
+.order-add-modal-header-container {
+    margin-top: 1rem;
+}
+
 /* Заголовок модалки */
 .order-add-modal-header {
     font-size: 24px;
     font-weight: bold;
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-/* Контейнер поиска и фильтра */
-.order-add-search-filter {
     display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-/* Поле поиска */
-.order-add-search-input {
-    flex: 1;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    width: 100%;
+    justify-content: center;
 }
 
 /* Основной контейнер списка товаров */
@@ -80,10 +76,29 @@ body.no-scroll {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin: 20px 0;
-    max-height: 50vh;
+    margin-top: 40px;
+    /* max-height: 50vh; */
     overflow-y: auto;
-    padding-right: 8px;
+    padding: 10px 8px;
+    border: 1px solid rgba(0, 0, 0, 0.219);
+    border-radius: 6px;
+}
+
+/* Стилизация скроллбара */
+.order-add-items-modal-list::-webkit-scrollbar {
+    width: 10px;
+    background: transparent;
+}
+
+.order-add-items-modal-list::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.order-add-items-modal-list::-webkit-scrollbar-thumb:hover {
+    background: #ccc;
 }
 
 /* Элемент списка товаров */
@@ -224,32 +239,49 @@ body.no-scroll {
     pointer-events: none;
 }
 
+/* Сообщение о пустом списке */
+.order-add-items-modal-empty-list-message {
+    text-align: center;
+    color: #636e72;
+    font-size: 18px;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.order-add-items-modal-empty-list-sub {
+    font-size: 14px;
+    color: #b2bec3;
+    margin-top: 8px;
+}
+
 /* Контейнер кнопок в нижней части окна */
 .order-add-modal-actions {
     display: flex;
     gap: 10px;
     justify-content: flex-end;
+    margin-top: 24px;
 }
 
 /* Кнопки действий */
 .order-add-close-btn,
 .order-add-save-btn {
-    padding: 8px 20px;
-    border: none;
-    border-radius: 6px;
+    /* padding: 8px 20px; */
+    border: 0.5px solid rgba(0, 0, 0, 0.514);
+    /* border-radius: 6px; */
     cursor: pointer;
     transition: all 0.3s;
 }
 
-.order-add-close-btn {
-    background: #e0e0e0;
-}
-
 .order-add-save-btn {
-    background: #83D167;
+    background-color: #83D167;
     color: white;
 }
 
 .order-add-save-btn:hover {
-    background: #6db356;
+    background-color: #3e9b1d;
 }

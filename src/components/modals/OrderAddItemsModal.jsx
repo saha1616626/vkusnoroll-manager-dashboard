@@ -1,6 +1,6 @@
 // Модальное окно для добавления товара в заказ
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 
 // Импорт компонентов
@@ -9,6 +9,7 @@ import Loader from '../dynamic/Loader';  // Анимация загрузки д
 import SearchInput from '../ui/SearchInput'; // Поле поиска
 import FilterButton from "../ui/FilterButton"; // Кнопка фильтра
 import FilterMenu from '../ui/FilterMenu'; // Меню фильтра
+import RefreshButton from '../../components/dynamic/RefreshButton';
 
 // Импорт иконок
 
@@ -41,6 +42,29 @@ const OrderAddItemsModal = ({ isOpen, onCancel, onSave, existingItems = [] }) =>
         formData: {} // Поля фильтрации пустые
     });
     const [activeFilters, setActiveFilters] = useState({}); // Состояние хранения данных полей фильтра
+    const [searchQuery, setSearchQuery] = useState(''); // Поисковый запрос
+
+    /* 
+    ===========================
+     Управление данными
+    ===========================
+    */
+
+    // Функция загрузки данных из БД
+    const fetchData = useCallback(async () => {
+        setIsLoading(true); // Включаем анимацию загрузки данных
+        try {
+            // Получение списка блюд без изображения и те товары, которые не в архиве, и их категория не в архиве
+            const dishesRes = await api.getUnarchivedDishesNoImageWithActiveCategory();
+
+            setDishes(dishesRes.data);
+            setFilteredDishes(dishesRes.data);
+        } catch (error) {
+            console.error('Ошибка загрузки:', error);
+        } finally { // Выключаем анимацию загрузки данных
+            setTimeout(() => setIsLoading(false), timeOut);
+        }
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps 
 
     /* 
     ===========================
@@ -51,19 +75,8 @@ const OrderAddItemsModal = ({ isOpen, onCancel, onSave, existingItems = [] }) =>
     // Загрузка данных
     useEffect(() => {
         if (!isOpen) return;
-        const fetchDishes = async () => {
-            try {
-                // Получение списка блюд без изображения и те товары, которые не в архиве, и их категория не в архиве
-                const dishesRes = await api.getUnarchivedDishesNoImageWithActiveCategory();
-
-                setDishes(dishesRes.data);
-                setFilteredDishes(dishesRes.data);
-            } catch (error) {
-                console.error('Ошибка загрузки:', error);
-            }
-        };
-        fetchDishes();
-    }, [isOpen]);
+        fetchData();
+    }, [isOpen]);  // eslint-disable-line react-hooks/exhaustive-deps 
 
     // Инициализация количеств на основе существующих товаров
     useEffect(() => {
@@ -140,18 +153,48 @@ const OrderAddItemsModal = ({ isOpen, onCancel, onSave, existingItems = [] }) =>
 
     // Убираем скролл с перекрытой страницы
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && isLoading === false) {
             document.body.classList.add('no-scroll');
             return () => document.body.classList.remove('no-scroll');
         }
-    }, [isOpen]);
+    }, [isOpen, isLoading]);
 
+    // Эффект для применения фильтров и поиска
+    useEffect(() => {
+        if (!dishes.length) return;
+
+        const filtered = applyFiltersAndSearch(dishes, activeFilters, searchQuery);
+        setFilteredDishes(filtered);
+    }, [dishes, activeFilters, searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps 
 
     /* 
     ===========================
      Управление фильтром
     ===========================
     */
+
+    // Кнопка закрыть/открыть меню фильтра
+    const toggleFilter = () => {
+        setFilterState(prev => { // Обновление состояния фильтра
+            const newState = {
+                ...prev,
+                isOpen: !prev.isOpen, // Управление меню
+                isActive: !prev.isActive // Управление кнопкой
+            };
+            saveFilterState(newState); // Сохраняем состояние фильтра в localStorage
+            return newState;
+        });
+    };
+
+    // Сохранение состояния фильтров
+    const saveFilterState = (state) => {
+        localStorage.setItem(`filterState_${modalId}`, JSON.stringify({
+            ...state,
+            formData: {
+                ...state.formData,
+            }
+        }));
+    };
 
     // Конфигурация фильтра
     const initFilters = (categories) => {
@@ -168,6 +211,44 @@ const OrderAddItemsModal = ({ isOpen, onCancel, onSave, existingItems = [] }) =>
             { type: 'number', name: 'quantityInSet', label: 'Кол-во в наборе (шт)', placeholder: '' }
         ]);
     }
+
+    // Фильтрация данных
+    const applyFiltersAndSearch = useCallback((data, filters, search) => {
+        let result = data;
+
+        // Применяем текстовый поиск
+        if (search.trim()) {
+            result = result.filter(dish =>
+                dish.name.toLowerCase().includes(search.toLowerCase())
+            );
+        }
+
+        // Фильтрация по категориям (только если есть выбранные категории)
+        if (filters.categories && filters.categories.length > 0) {
+            const categoryIds = filters.categories.map(cat => cat.id);
+            result = result.filter(dish => categoryIds.includes(dish.categoryId));
+        }
+
+        // Фильтрация по весу (проверяем, что значение не пустое и валидное)
+        if (filters.weight && filters.weight.trim() !== "" && !isNaN(filters.weight)) {
+            const weight = parseFloat(filters.weight);
+            result = result.filter(dish => dish.weight === weight);
+        }
+
+        // Фильтрация объему (проверяем, что значение не пустое и валидное)
+        if (filters.volume && filters.volume.trim() !== "" && !isNaN(filters.volume)) {
+            const volume = parseFloat(filters.volume);
+            result = result.filter(dish => dish.volume === volume);
+        }
+
+        // Фильтрация по кол-ву штук в наборе (проверяем, что значение не пустое и валидное)
+        if (filters.quantityInSet && filters.quantityInSet.trim() !== "" && !isNaN(filters.quantityInSet)) {
+            const quantity = parseFloat(filters.quantityInSet);
+            result = result.filter(dish => dish.quantity === quantity);
+        }
+
+        return result;
+    }, []); // Все используемые данные в фильтрах
 
     // Получение списка категорий
     const fetchCategories = async () => {
@@ -200,10 +281,12 @@ const OrderAddItemsModal = ({ isOpen, onCancel, onSave, existingItems = [] }) =>
         setIsLoading(true); // Включаем анимацию загрузки данных
         try {
             // Нормализуем данные перед отправкой
-
             searchInputRef.current?.clear(); // Очистка поля поиска
+            setSearchQuery('');
 
             // Сохраняем значения полей фильтра
+            setActiveFilters(filterState.formData);
+            saveFilterState({ ...filterState, formData: filterState.formData }); // Сохраняем состояние фильтра в localStorage
         } catch (error) {
             console.error('Filter search error:', error);
         } finally {
@@ -217,10 +300,42 @@ const OrderAddItemsModal = ({ isOpen, onCancel, onSave, existingItems = [] }) =>
         try {
             searchInputRef.current?.clear(); // Очистка поля поиска
 
-            setFilterState({});
+            setSearchQuery('');
+            setFilterState({ ...filterState, formData: {} });
+            saveFilterState(filterState);
             setActiveFilters({});
         } catch (error) {
             console.error('Filter reset error:', error);
+        } finally {
+            setTimeout(() => setIsLoading(false), timeOut);
+        }
+    };
+
+    // Обновление данные на странице (Иконка)
+    const refreshData = async () => {
+        setIsLoading(true);
+        try {
+            await fetchData();
+            // Принудительно обновляем фильтрацию после загрузки новых данных
+            setSearchQuery(searchInputRef.current.search()); // Устанавливаем значение поиска
+            setActiveFilters(filterState.formData); // Сохраняем значения полей фильтра
+            saveFilterState({ ...filterState, formData: filterState.formData }); // Сохраняем состояние фильтра в localStorage
+        } catch (error) {
+            console.error('Refresh error:', error);
+        } finally {
+            setTimeout(() => setIsLoading(false), timeOut);
+        }
+    };
+
+    // Обработчик поиска
+    const handleSearch = (term) => {
+        setIsLoading(true);
+        try {
+            setSearchQuery(term);
+            setActiveFilters(filterState.formData);
+            saveFilterState({ ...filterState, formData: filterState.formData }); // Сохраняем состояние фильтра в localStorage
+        } catch (error) {
+            console.error('Filter search error:', error);
         } finally {
             setTimeout(() => setIsLoading(false), timeOut);
         }
@@ -269,116 +384,137 @@ const OrderAddItemsModal = ({ isOpen, onCancel, onSave, existingItems = [] }) =>
     return ReactDOM.createPortal(
         <div className="order-add-modal-overlay">
             <div className="order-add-modal" ref={modalRef}>
-                {/* Заголовок */}
-                <div className="order-add-modal-header">
-                    Добавить товары в заказ
-                </div>
 
-                {/* Поиск и фильтр */}
-                <div className="order-add-search-filter">
-                    <input
-                        type="text"
-                        placeholder="Поиск блюда"
-                        // value={searchQuery}
-                        // onChange={(e) => setSearchQuery(e.target.value)}
-                        className="order-add-search-input"
-                    />
-                    <FilterButton
-                        isActive={filterState.isActive}
-                        toggleFilter={() => setFilterState(prev => ({
-                            ...prev,
-                            isOpen: !prev.isOpen
-                        }))}
-                    />
-                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', alignContent: 'flex-start' }}>
+                    <div className="control-components order-add-modal-header-container">
 
-                {/* Меню фильтра */}
-                <div className="page-filter">
-                    <FilterMenu
-                        isOpen={filterState.isOpen}
-                        filters={filters}
-                        formData={filterState.formData}
-                        onFormUpdate={handleFilterFormUpdate}
-                        onSearch={handleFilterSearch}
-                        onReset={handleFilterReset}
-                    />
-                </div>
-
-                {/* Список товаров */}
-                <div className="order-add-items-modal-list">
-                    {filteredDishes.map(dish => (
-                        <div key={dish.id} className="order-add-items-modal-item">
-                            <div className="order-add-items-modal-main">
-                                {/* Название и категория в одной строке */}
-                                <div className="order-add-items-modal-header">
-                                    <h4 className="order-add-items-modal-title">{dish.name}</h4>
-                                    <span className="order-add-items-modal-category">{dish.category}</span>
-
-                                    <div className="order-add-items-modal-props">
-                                        {dish.isWeight && <span>{dish.weight}г</span>}
-                                        {dish.isVolume && <span>{dish.volume}мл</span>}
-                                        {dish.isQuantitySet && <span>{dish.quantity}шт</span>}
-                                    </div>
-                                </div>
-
-                                {/* Свойства и цена в одной строке */}
-                                <div className="order-add-items-modal-details">
-                                    <div className="order-add-items-modal-price">{dish.price} ₽</div>
-                                </div>
-                            </div>
-
-                            <div className="order-add-items-modal-quantity">
-                                <button
-                                    className="order-add-items-modal-quantity-btn"
-                                    onClick={() => handleQuantityChange(dish.id, Math.max(0, (quantities[dish.id] || 0) - 1))}
-                                >
-                                    <svg width="14" height="2" viewBox="0 0 14 2" fill="none">
-                                        <path d="M0 1H14" stroke="currentColor" strokeWidth="2" />
-                                    </svg>
-                                </button>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={quantities[dish.id] ?? ""}
-                                    onChange={(e) => handleQuantityChange(dish.id, e.target.value)}
-                                    onBlur={(e) => {
-                                        // Принудительно устанавливаем 0 для пустых значений
-                                        if (e.target.value === "" || isNaN(quantities[dish.id])) {
-                                            setQuantities(prev => ({
-                                                ...prev,
-                                                [dish.id]: 0
-                                            }));
-                                        }
-                                    }}
-                                />
-                                <button
-                                    className="order-add-items-modal-quantity-btn"
-                                    onClick={() => handleQuantityChange(dish.id, (quantities[dish.id] || 0) + 1)}
-                                >
-                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                        <path d="M6 0H8V6H14V8H8V14H6V8H0V6H6V0Z" fill="currentColor" />
-                                    </svg>
-                                </button>
-                            </div>
+                        <div className="grouping-groups-elements">
+                            {/* Обновить страницу */}
+                            <RefreshButton title="Обновить страницу" onRefresh={refreshData} />
                         </div>
-                    ))}
+
+                        {/* Заголовок */}
+                        <div className="order-add-modal-header">
+                            Добавить позицию
+                        </div>
+
+                        {/* Поиск и фильтр */}
+                        <div className="grouping-elements">
+                            {/* Поиск */}
+                            <SearchInput
+                                ref={searchInputRef}
+                                placeholder="Поиск по названию"
+                                onSearch={handleSearch}
+                            />
+                            <FilterButton
+                                isActive={filterState.isActive}
+                                toggleFilter={toggleFilter}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Меню фильтра */}
+                    <div className="page-filter">
+                        <FilterMenu
+                            isOpen={filterState.isOpen}
+                            filters={filters}
+                            formData={filterState.formData}
+                            onFormUpdate={handleFilterFormUpdate}
+                            onSearch={handleFilterSearch}
+                            onReset={handleFilterReset}
+                        />
+                    </div>
+
+                    {isLoading ?
+                        <div>
+                            <Loader isWorking={isLoading} />
+                        </div>
+                        :
+                        <>
+                            {/* Список товаров */}
+                            <div className="order-add-items-modal-list">
+                                {filteredDishes.length === 0 ? (
+                                    <div className="order-add-items-modal-empty-list-message">
+                                        Список пуст
+                                        <div className="order-add-items-modal-empty-list-sub">Попробуйте изменить параметры поиска</div>
+                                    </div>
+                                ) : (
+                                    filteredDishes.map(dish => (
+                                        <div key={dish.id} className="order-add-items-modal-item">
+                                            <div className="order-add-items-modal-main">
+                                                {/* Название и категория в одной строке */}
+                                                <div className="order-add-items-modal-header">
+                                                    <h4 className="order-add-items-modal-title">{dish.name}</h4>
+                                                    <span className="order-add-items-modal-category">{dish.category}</span>
+
+                                                    <div className="order-add-items-modal-props">
+                                                        {dish.isWeight && <span>{dish.weight}г</span>}
+                                                        {dish.isVolume && <span>{dish.volume}мл</span>}
+                                                        {dish.isQuantitySet && <span>{dish.quantity}шт</span>}
+                                                    </div>
+                                                </div>
+
+                                                {/* Свойства и цена в одной строке */}
+                                                <div className="order-add-items-modal-details">
+                                                    <div className="order-add-items-modal-price">{dish.price} ₽</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="order-add-items-modal-quantity">
+                                                <button
+                                                    className="order-add-items-modal-quantity-btn"
+                                                    onClick={() => handleQuantityChange(dish.id, Math.max(0, (quantities[dish.id] || 0) - 1))}
+                                                >
+                                                    <svg width="14" height="2" viewBox="0 0 14 2" fill="none">
+                                                        <path d="M0 1H14" stroke="currentColor" strokeWidth="2" />
+                                                    </svg>
+                                                </button>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={quantities[dish.id] ?? ""}
+                                                    onChange={(e) => handleQuantityChange(dish.id, e.target.value)}
+                                                    onBlur={(e) => {
+                                                        // Принудительно устанавливаем 0 для пустых значений
+                                                        if (e.target.value === "" || isNaN(quantities[dish.id])) {
+                                                            setQuantities(prev => ({
+                                                                ...prev,
+                                                                [dish.id]: 0
+                                                            }));
+                                                        }
+                                                    }}
+                                                />
+                                                <button
+                                                    className="order-add-items-modal-quantity-btn"
+                                                    onClick={() => handleQuantityChange(dish.id, (quantities[dish.id] || 0) + 1)}
+                                                >
+                                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                                        <path d="M6 0H8V6H14V8H8V14H6V8H0V6H6V0Z" fill="currentColor" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </>}
                 </div>
 
                 {/* Кнопки */}
                 <div className="order-add-modal-actions">
                     <button
                         type="button"
-                        className="order-add-close-btn"
+                        className="button-control order-add-close-btn"
                         onClick={onCancel}
                     >
                         Закрыть
                     </button>
                     <button
                         type="button"
-                        className="order-add-save-btn"
+                        className="button-control order-add-save-btn"
                         onClick={() => handleSave()}
                     >
-                        Выбрать
+                        Сохранить
                     </button>
                 </div>
             </div>

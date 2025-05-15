@@ -54,6 +54,20 @@
     gap: 2rem;
 }
 
+/* Группа блоков */
+.add-edit-order-top-group {
+    display: grid;
+    grid-template-columns: 1fr 0.5fr;
+    gap: 1.5rem;
+    width: 100%;
+    margin-bottom: 1.5rem;
+}
+
+/* Группа блоков получатель + статусы. При наличии комментария к заказу от клиента */
+.add-edit-order-top-group--order-client-comment {
+    grid-template-columns: 1fr 0.5fr;
+}
+
 /* Стили для секций */
 .add-edit-order-section {
     background: white;
@@ -102,7 +116,7 @@
 
 /* Поля для ввода данных получателей */
 .add-edit-order-input-recipients-details {
-    width: 250px;
+    width: calc(250px - 27.2px);
 }
 
 .add-edit-order-input:focus,
@@ -170,7 +184,7 @@
 
 /* Контейнер поля для сдачи */
 .add-edit-order-change-field {
-    width: 30%;
+    width: calc(100% - 32px);
     margin: 12px 0 0 0rem;
     padding: 1rem;
     background: #f8f8f8;
@@ -458,6 +472,103 @@
     border-top: 2px solid #eee;
 }
 
+/* ================================== */
+/* Блок статусов заказа и оплаты */
+/* ================================== */
+
+/* Группировка статуса и оплаты */
+.add-edit-order-status-group {
+    display: grid;
+    /* grid-template-columns: 1fr auto; */
+    gap: 2rem;
+    align-items: flex-end;
+}
+
+/* Стили для селекта статусов */
+.add-edit-order-status-select-wrapper {
+    position: relative;
+    width: 250px;
+}
+
+.add-edit-order-status-select {
+    width: 100%;
+    padding: 0.8rem 2.5rem 0.8rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    appearance: none;
+    background-color: white;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237f8c8d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.add-edit-order-status-select:hover {
+    border-color: #27ae60;
+    box-shadow: 0 0 0 1px rgba(39, 174, 96, 0.1);
+}
+
+.add-edit-order-status-select:focus {
+    outline: none;
+    border-color: #27ae60;
+    box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.1);
+}
+
+.add-edit-order-status-option {
+    padding: 0.5rem;
+    background: white;
+    color: #2c3e50;
+}
+
+.add-edit-order-status-option:hover {
+    background: #f8f9fa !important;
+}
+
+.add-edit-order-status-option option:checked {
+    background: #f8f9fa;
+    font-weight: 500;
+    color: #27ae60;
+}
+
+/* Чекбокс статуса оплаты */
+
+.add-edit-order-payment-status-label {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    transition: border-color 0.3s;
+    gap: 0.8rem;
+    cursor: pointer;
+    background: #eaeaeb;
+    width: calc(250px - 27.2px);
+}
+
+.add-edit-order-payment-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #27ae60;
+    border-radius: 6px;
+    appearance: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.add-edit-order-payment-checkbox:checked {
+    background: #27ae60 url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='M20 6L9 17l-5-5'/%3e%3c/svg%3e") center/12px no-repeat;
+}
+
+.add-edit-order-payment-status-text {
+    /* font-size: 0.95rem; */
+    color: #000000;
+    font-weight: 400;
+    font-size: 1rem;
+}
+
 /* Адаптивность */
 @media (max-width: 1200px) {
 
@@ -484,5 +595,11 @@
     /* Группировка даты и времени */
     .add-edit-order-delivery-time-group {
         grid-template-columns: 1fr;
+    }
+
+    /* Группа блоков получатель + статусы */
+    .add-edit-order-top-group {
+        grid-template-columns: 1fr;
+        gap: 1rem;
     }
 }

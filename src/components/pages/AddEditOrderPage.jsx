@@ -40,6 +40,8 @@ const AddEditOrderPage = ({ mode }) => {
         paymentMethod: '', // Тип оплаты
         changeAmount: '', // Подготовить сдачу с суммы
         deliveryCost: '', // Стоимость доставки
+        orderStatusId: '',
+        isPaymentStatus: '',
         address: { // Адрес
             city: '',
             street: '',
@@ -83,6 +85,7 @@ const AddEditOrderPage = ({ mode }) => {
         isFreeDelivery: false,
         freeThreshold: 0
     });
+    const [orderStatuses, setOrderStatuses] = useState([]);
 
 
     const [refreshKey, setRefreshKey] = useState(0); // Для принудительного обновления данных на странице по таймеру
@@ -257,6 +260,47 @@ const AddEditOrderPage = ({ mode }) => {
         loadOrderSettings();
     }, []);
 
+    // Получаем и устанавливаем список статусов заказов
+    useEffect(() => {
+        const loadDeliverySchedule = async () => {
+            try {
+                const response = await api.getOrderStatuses();
+
+                // Проверяем наличие данных
+                if (!response.data || !Array.isArray(response.data)) { throw new Error('Invalid order statuses data'); }
+
+                // Добавляем системный статус
+                const systemStatuses = [
+                    { id: 'null', name: 'Новый', sequenceNumber: -1, isAvailableClient: false, isFinalResultPositive: null }
+                ];
+
+                const allStatuses = [...systemStatuses, ...response.data]
+                    .sort((a, b) => a.sequenceNumber - b.sequenceNumber);
+
+                setOrderStatuses(allStatuses);
+            } catch (error) {
+                console.error('Ошибка загрузки расписания:', error);
+                if (window.history.length > 1) { // В случае ошибки происходит маршрутизация на предыдущую страницу или в меню
+                    window.history.back();
+                } else {
+                    window.location.href = '/menu';
+                }
+            }
+        };
+
+        loadDeliverySchedule();
+    }, []);
+
+    // Установка статуса заказа по умолчанию
+    useEffect(() => {
+        if (orderStatuses.length > 0) {
+            const defaultStatus = orderStatuses.find(s => s.name === 'Новый');
+            setFormData(prev => ({
+                ...prev,
+                orderStatusId: defaultStatus?.id || ''
+            }));
+        }
+    }, [orderStatuses]);
 
     /* 
     ===========================
@@ -279,12 +323,21 @@ const AddEditOrderPage = ({ mode }) => {
 
     // Обработчик изменений в полях адреса
     const handleAddressChange = (addressData) => {
-        // setFormData(prev => ({
-        //     ...prev,
-        //     address: {
-        //         addressData
-        //     }
-        // }));
+        setFormData(prev => ({
+            ...prev,
+            address: {
+                city: addressData.city,
+                street: addressData.street,
+                house: addressData.house,
+                isPrivateHome: addressData.isPrivateHome,
+                entrance: addressData.entrance || '',
+                floor: addressData.floor || '',
+                apartment: addressData.apartment || '',
+                comment: addressData.comment || ''
+            }
+        }));
+
+        // Адрес для отображения
         setDeliveryAddress(addressData);
     };
 
@@ -373,200 +426,224 @@ const AddEditOrderPage = ({ mode }) => {
             <div className="add-edit-order-content">
                 {/* Левая колонка */}
                 <div className="add-edit-order-main-section">
-                    {/* Блок получателя */}
-                    <section className="add-edit-order-section">
-                        <h2 className="add-edit-order-subtitle">Данные получателя</h2>
-                        <div className="add-edit-order-form-group">
-                            <div className="add-edit-order-input-group">
-                                <label>Имя</label>
-                                <input
-                                    type="text"
-                                    placeholder=""
-                                    maxLength={50}
-                                    className={`add-edit-order-input add-edit-order-input-recipients-details ${errors.name ? 'input-error' : ''}`}
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                />
+
+                    {/* Группа блоков получатель + статусы */}
+                    <div className={`add-edit-order-top-group ${formData.comment ? 'add-edit-order-top-group--order-client-comment' : ''}`}>
+                        {/* Блок получателя */}
+                        <section className="add-edit-order-section">
+                            <h2 className="add-edit-order-subtitle">Данные получателя</h2>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', width: '100%' }}>
+                                <div className="add-edit-order-form-group">
+                                    <div className="add-edit-order-input-group">
+                                        <label>Имя</label>
+                                        <input
+                                            type="text"
+                                            placeholder=""
+                                            maxLength={50}
+                                            className={`add-edit-order-input add-edit-order-input-recipients-details ${errors.name ? 'input-error' : ''}`}
+                                            value={formData.name}
+                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div className="add-edit-order-input-group">
+                                        <label>Телефон</label>
+                                        <IMaskInput
+                                            mask="+7(000)000-00-00"
+                                            value={formData.numberPhone}
+                                            onAccept={(value) => setFormData({ ...formData, numberPhone: value })}
+                                            className={`add-edit-order-input add-edit-order-input-recipients-details ${errors.numberPhone ? 'input-error' : ''}`}
+                                            placeholder="+7(___) ___-__-__"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="add-edit-order-form-group">
+                                    <div className="add-edit-order-input-group"
+                                        // style={{ // Комментарий отображается, только если он есть и в режиме редактирования.
+                                        //     display: mode === 'add' || !formData.comment ? 'none' : ''
+                                        // }}
+                                    >
+                                        <label>Комментарий клиента</label>
+                                        <textarea className="add-edit-order-textarea"
+                                            style={{ height: '100%' }}
+                                            value={formData?.comment} disabled />
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="add-edit-order-input-group">
-                                <label>Телефон</label>
-                                <IMaskInput
-                                    mask="+7(000)000-00-00"
-                                    value={formData.numberPhone}
-                                    onAccept={(value) => setFormData({ ...formData, numberPhone: value })}
-                                    className={`add-edit-order-input add-edit-order-input-recipients-details ${errors.numberPhone ? 'input-error' : ''}`}
-                                    placeholder="+7(___) ___-__-__"
-                                />
-                            </div>
+                        </section>
 
-                            <div className="add-edit-order-input-group"
-                                style={{ // Комментарий отображается, только если он есть и в режиме редактирования.
-                                    display: mode === 'add' || !formData.comment ? 'none' : ''
-                                }}
-                            >
-                                <label>Комментарий клиента</label>
-                                <textarea className="add-edit-order-textarea" disabled />
-                            </div>
-                        </div>
-                    </section>
+                        {/* Статус и оплата */}
+                        <section className="add-edit-order-section">
+                            <h2 className="add-edit-order-subtitle">Статусы</h2>
+                            <div className="add-edit-order-status-group">
+                                <div className="add-edit-order-input-group">
+                                    <label>Статус заказа</label>
+                                    <div className="add-edit-order-status-select-wrapper">
+                                        <select
+                                            className="add-edit-order-status-select"
+                                            value={formData.orderStatusId}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, orderStatusId: e.target.value }))}
+                                        >
+                                            {orderStatuses.map(status => (
+                                                <option key={status.id} value={status.id}>
+                                                    {status.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
 
-                    {/* Статус и оплата */}
-                    <section className="add-edit-order-section">
-                        <div className="add-edit-order-status-group">
-                            <div className="add-edit-order-input-group">
-                                <label>Статус заказа</label>
-                                <select>
-                                    <option>Новый</option>
-                                    <option>В обработке</option>
-                                    <option>Выполнен</option>
-                                </select>
-                            </div>
-
-                            <div className="add-edit-order-input-group">
-                                <label>Оплачен</label>
-                                <input type="checkbox" />
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* Способ оплаты */}
-                    <section className="add-edit-order-section">
-                        <h2 className="add-edit-order-subtitle">Способ оплаты</h2>
-                        <div className="add-edit-order-payment-methods">
-                            {['Наличные', 'Картой', 'Онлайн'].map(method => (
-                                <div key={method}>
-                                    <label className="add-edit-order-payment-label">
-                                        <div className="add-edit-order-payment-radio-group">
-                                            <input
-                                                type="radio"
-                                                name="payment"
-                                                className="add-edit-order-radio"
-                                                checked={formData.paymentMethod === method}
-                                                onChange={() => setFormData(prev => ({ ...prev, paymentMethod: method }))}
-                                            />
-                                            <span className="add-edit-order-payment-text">{method}</span>
-                                        </div>
+                                <div className="add-edit-order-input-group">
+                                    <label>Статус оплаты</label>
+                                    <label className="add-edit-order-payment-status-label">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.isPaymentStatus}
+                                            onChange={e => setFormData(prev => ({ ...prev, isPaymentStatus: e.target.checked }))}
+                                            className="add-edit-order-payment-checkbox"
+                                        />
+                                        <span className="add-edit-order-payment-status-text"> {formData?.isPaymentStatus ? 'Оплачен' : 'Не оплачен'}</span>
                                     </label>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
 
-                                    {method === 'Наличные' && formData.paymentMethod === 'Наличные' && (
-                                        <div className="add-edit-order-change-field">
-                                            <label className="add-edit-order-field-label">Подготовить сдачу с</label>
-                                            <div className="add-edit-order-currency-input">
-                                                <input
-                                                    type="number"
-                                                    placeholder="5000"
-                                                    value={formData.changeAmount}
-                                                    onChange={e => setFormData(prev => ({ ...prev, paymentMethod: e.target.value }))}
-                                                    min={total}
-                                                />
-                                                <span className="add-edit-order-currency">₽</span>
-                                            </div>
-                                            {formData.changeAmount && formData.changeAmount < total && (
-                                                <p className="add-edit-order-error-message">
-                                                    Сумма должна быть не меньше {total}₽ или оставьте поле пустым
+                    {/* Группа блоков доставка + способ оплаты */}
+                    <div className="add-edit-order-top-group">
+                        {/* Блок доставки */}
+                        <section className="add-edit-order-section">
+                            <h2 className="add-edit-order-subtitle">Доставка</h2>
+
+                            <div className="add-edit-order-form-group">
+                                {/* Блок адреса */}
+                                <div className="add-edit-order-input-group">
+                                    <label>Адрес доставки</label>
+
+                                    {deliveryAddress ? (
+                                        <div className="add-edit-order-address-card" title={!isAddressValid ? 'Изменилась зона доставки. Пожалуйста, обновите адрес.' : null}>
+                                            <div className={`add-edit-order-address-content ${!isAddressValid ? 'invalid' : ''}`}>
+                                                <p className="add-edit-order-address-main">
+                                                    {deliveryAddress.city}, {deliveryAddress.street} {deliveryAddress.house}
+                                                    {deliveryAddress.isPrivateHome && (
+                                                        <span className="add-edit-order-address-private">Частный дом</span>
+                                                    )}
                                                 </p>
+                                                {(deliveryAddress.entrance && deliveryAddress.floor && deliveryAddress.apartment && !deliveryAddress.isPrivateHome) && (
+                                                    <div className="add-edit-order-address-details">
+                                                        <div>Подъезд: {deliveryAddress.entrance}</div>
+                                                        <div>Этаж: {deliveryAddress.floor}</div>
+                                                        <div>Квартира: {deliveryAddress.apartment}</div>
+                                                    </div>
+                                                )}
+                                                {(deliveryAddress.comment) && (
+                                                    <div className="add-edit-order-address-comment">
+                                                        <span className="icon">📝</span>
+                                                        {deliveryAddress.comment.slice(0, 150)}{deliveryAddress.comment.length > 150 && '...'}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {!isAddressValid && (
+                                                <div className="add-edit-order-address-validation-error">
+                                                    Адрес вне зоны доставки
+                                                </div>
                                             )}
+                                            <button
+                                                className={`add-edit-order-address-more ${deliveryAddress.comment ? 'add-edit-order-address-more--address-comment' : ''}`}
+                                                onClick={() => {
+
+                                                }}>
+                                                <img src={moreIcon} alt="Изменить" width={16} />
+                                            </button>
                                         </div>
+                                    ) : (
+                                        <button
+                                            className="add-edit-order-add-address"
+                                            onClick={() => {
+                                                setShowAddressOrderModal(true);
+                                                setModeAddressOrderModal('AddEdit');
+                                            }}
+                                        >
+                                            + Добавить адрес доставки
+                                        </button>
+                                    )}
+                                    {!deliveryAddress && errors.address && (
+                                        <span className="add-edit-order-error-message">Выберите адрес доставки</span>
                                     )}
                                 </div>
-                            ))}
-                        </div>
-                    </section>
 
-                    {/* Блок доставки */}
-                    <section className="add-edit-order-section">
-                        <h2 className="add-edit-order-subtitle">Доставка</h2>
-
-                        <div className="add-edit-order-form-group">
-                            {/* Блок адреса */}
-                            <div className="add-edit-order-input-group">
-                                <label>Адрес доставки</label>
-
-                                {deliveryAddress ? (
-                                    <div className="add-edit-order-address-card" title={!isAddressValid ? 'Изменилась зона доставки. Пожалуйста, обновите адрес.' : null}>
-                                        <div className={`add-edit-order-address-content ${!isAddressValid ? 'invalid' : ''}`}>
-                                            <p className="add-edit-order-address-main">
-                                                {deliveryAddress.city}, {deliveryAddress.street} {deliveryAddress.house}
-                                                {deliveryAddress.isPrivateHome && (
-                                                    <span className="add-edit-order-address-private">Частный дом</span>
-                                                )}
-                                            </p>
-                                            {(deliveryAddress.entrance && deliveryAddress.floor && deliveryAddress.apartment && !deliveryAddress.isPrivateHome) && (
-                                                <div className="add-edit-order-address-details">
-                                                    <div>Подъезд: {deliveryAddress.entrance}</div>
-                                                    <div>Этаж: {deliveryAddress.floor}</div>
-                                                    <div>Квартира: {deliveryAddress.apartment}</div>
-                                                </div>
-                                            )}
-                                            {(deliveryAddress.comment) && (
-                                                <div className="add-edit-order-address-comment">
-                                                    <span className="icon">📝</span>
-                                                    {deliveryAddress.comment.slice(0, 150)}{deliveryAddress.comment.length > 150 && '...'}
-                                                </div>
-                                            )}
-                                        </div>
-                                        {!isAddressValid && (
-                                            <div className="add-edit-order-address-validation-error">
-                                                Адрес вне зоны доставки
-                                            </div>
-                                        )}
+                                {/* Блок даты и времени */}
+                                <div className="add-edit-order-input-group">
+                                    <label>Дата и время доставки</label>
+                                    <div className="add-edit-order-delivery-time-group">
                                         <button
-                                            className={`add-edit-order-address-more ${deliveryAddress.comment ? 'add-edit-order-address-more--address-comment' : ''}`}
-                                            onClick={() => {
-
-                                            }}>
-                                            <img src={moreIcon} alt="Изменить" width={16} />
+                                            className="add-edit-order-time-select-btn"
+                                            onClick={() => setIsDeliveryTimeModalOpen(true)}
+                                        >
+                                            <img src={calendarIcon} alt="Календарь" width={20} />
+                                            {deliveryDate && deliveryTime
+                                                ? `${new Date(deliveryDate).toLocaleDateString('ru-RU')} ${deliveryTime}`
+                                                : "Выбрать дату и время"}
                                         </button>
                                     </div>
-                                ) : (
-                                    <button
-                                        className="add-edit-order-add-address"
-                                        onClick={() => {
-                                            setShowAddressOrderModal(true);
-                                            setModeAddressOrderModal('AddEdit');
-                                        }}
-                                    >
-                                        + Добавить адрес доставки
-                                    </button>
-                                )}
-                                {!deliveryAddress && errors.address && (
-                                    <span className="add-edit-order-error-message">Выберите адрес доставки</span>
-                                )}
-                            </div>
-
-                            {/* Блок даты и времени */}
-                            <div className="add-edit-order-input-group">
-                                <label>Дата и время доставки</label>
-                                <div className="add-edit-order-delivery-time-group">
-                                    <button
-                                        className="add-edit-order-time-select-btn"
-                                        onClick={() => setIsDeliveryTimeModalOpen(true)}
-                                    >
-                                        <img src={calendarIcon} alt="Календарь" width={20} />
-                                        {deliveryDate && deliveryTime
-                                            ? `${new Date(deliveryDate).toLocaleDateString('ru-RU')} ${deliveryTime}`
-                                            : "Выбрать дату и время"}
-                                    </button>
+                                    {errors.datetime && (
+                                        <span className="add-edit-order-error-message">Выберите дату и время доставки</span>
+                                    )}
                                 </div>
-                                {errors.datetime && (
-                                    <span className="add-edit-order-error-message">Выберите дату и время доставки</span>
-                                )}
                             </div>
-                        </div>
 
-                        <div className="add-edit-order-delivery-price">
-                            <input type="number" placeholder="Стоимость доставки" className="add-edit-order-input" />
-                            <button>Рассчитать автоматически</button>
-                        </div>
-                    </section>
+                            <div className="add-edit-order-delivery-price">
+                                <input type="number" placeholder="Стоимость доставки" className="add-edit-order-input" />
+                                <button>Рассчитать автоматически</button>
+                            </div>
+                        </section>
 
-                    {/* Время доставки */}
-                    <section className="add-edit-order-section">
-                        <button className="add-edit-order-time-btn">
-                            Выбрать время доставки
-                        </button>
-                    </section>
+                        {/* Способ оплаты */}
+                        <section className="add-edit-order-section">
+                            <h2 className="add-edit-order-subtitle">Способ оплаты</h2>
+                            <div className="add-edit-order-payment-methods">
+                                {['Наличные', 'Картой', 'Онлайн'].map(method => (
+                                    <div key={method}>
+                                        <label className="add-edit-order-payment-label">
+                                            <div className="add-edit-order-payment-radio-group">
+                                                <input
+                                                    type="radio"
+                                                    name="payment"
+                                                    className="add-edit-order-radio"
+                                                    checked={formData.paymentMethod === method}
+                                                    onChange={() => setFormData(prev => ({ ...prev, paymentMethod: method }))}
+                                                />
+                                                <span className="add-edit-order-payment-text">{method}</span>
+                                            </div>
+                                        </label>
+
+                                        {method === 'Наличные' && formData.paymentMethod === 'Наличные' && (
+                                            <div className="add-edit-order-change-field">
+                                                <label className="add-edit-order-field-label">Подготовить сдачу с</label>
+                                                <div className="add-edit-order-currency-input">
+                                                    <input
+                                                        type="number"
+                                                        placeholder="5000"
+                                                        value={formData.changeAmount}
+                                                        onChange={e => setFormData(prev => ({ ...prev, changeAmount: e.target.value }))}
+                                                        min={total}
+                                                    />
+                                                    <span className="add-edit-order-currency">₽</span>
+                                                </div>
+                                                {formData.changeAmount && formData.changeAmount < total && (
+                                                    <p className="add-edit-order-error-message">
+                                                        Сумма должна быть не меньше {total}₽ или оставьте поле пустым
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    </div>
 
                     {/* Товары */}
                     <section className="add-edit-order-section">
@@ -605,7 +682,10 @@ const AddEditOrderPage = ({ mode }) => {
                     <section className="add-edit-order-section">
                         <div className="add-edit-order-input-group">
                             <label>Комментарий менеджера</label>
-                            <textarea className="add-edit-order-textarea" />
+                            <textarea 
+                            maxLength={1000}
+                            style={{height: '5rem'}}
+                            className="add-edit-order-textarea" />
                         </div>
                     </section>
                 </div>

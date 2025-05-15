@@ -7,13 +7,13 @@ import { IMaskInput } from 'react-imask'; // Создание маски на н
 // Импорт компонентов
 import { useYmaps } from './../Hooks/useYmaps'; // Кастомный хук для использования API Яндекс Карт
 import api from '../../utils/api';  // API сервера
-import { useDebounce } from '../Hooks/useDebounce'; // Задержка поиска
 import OrderCompositionTable from '../ui/OrderCompositionTable'; // Таблица для манипуляций над составом заказов
 import OrderAddItemsModal from '../modals/OrderAddItemsModal'; // Модальное окно для добавления товаров в заказ
 import AddressOrderModal from '../modals/AddressOrderModal'; // Модальное окно для управления адресом
 
 // Импорт иконок
 import deleteIcon from './../../assets/icons/delete.png'
+import moreIcon from './../../assets/icons/moreVertical.png';
 
 // Импорт стилей
 import './../../styles/pages/addEditOrderPage.css'
@@ -62,6 +62,8 @@ const AddEditOrderPage = ({ mode }) => {
     });
     const [localNotifications, setLocalNotifications] = useState([]); // Уведомления
 
+    const [deliveryZones, setDeliveryZones] = useState([]); // Зоны доставки
+    const [deliveryAddress, setDeliveryAddress] = useState(null); // Адрес доставки
     const [isAddressValid, setIsAddressValid] = useState(false); // Статус валидации адреса доставки
     const [showAddressOrderModal, setShowAddressOrderModal] = useState(false); // Управление отображением модального окна для управления адресом доставки
     const [modeAddressOrderModal, setModeAddressOrderModal] = useState('AddEdit'); // Режим отображения модального окна
@@ -84,8 +86,30 @@ const AddEditOrderPage = ({ mode }) => {
         }, 3000);
     }, []);
 
+    // Сумма заказа
+    const total = orderItems.reduce((sum, item) => sum + item.pricePerUnit * item.quantityOrder, 0);
+
+    /* 
+    ===========================
+     Управление картой
+    ===========================
+    */
+
+    // Загрузка зон доставки
+    useEffect(() => {
+        const loadZones = async () => {
+            try {
+                const response = await api.getDeliveryZones();
+                setDeliveryZones(response.data.zones || []);
+            } catch (error) {
+                console.error('Ошибка загрузки зон:', error);
+            }
+        };
+        loadZones();
+    }, []);
+
     //  Геокодирование адреса (Из координат в текст)
-    const reverseGeocode = useCallback(async (coordinates) => {
+    const reverseGeocode = async (coordinates) => {
         try {
             const geocode = await ymaps.geocode(coordinates, {
                 kind: 'house',
@@ -100,10 +124,62 @@ const AddEditOrderPage = ({ mode }) => {
             addLocalNotification('Ошибка получения адреса');
             return '';
         }
-    }, [ymaps, addLocalNotification]);
+    };
 
-    // Сумма заказа
-    const total = orderItems.reduce((sum, item) => sum + item.pricePerUnit * item.quantityOrder, 0);
+    // Валидация адреса для существующих зон
+    useEffect(() => {
+        const validateDeliveryAddress = async (coordinates) => {
+            if (!ymaps || !deliveryZones || !deliveryAddress || deliveryZones.length === 0) return false;
+
+            const tempMap = new ymaps.Map('hidden-map', { // Создаем скрытую карту
+                center: [56.129057, 40.406635],
+                zoom: 12.5,
+                controls: ['zoomControl']
+            });
+
+            try {
+                // Получаем и валидируем координаты
+                const coordinates = [deliveryAddress.latitude, deliveryAddress.longitude];
+
+                if (!coordinates || coordinates.some(c => isNaN(c)) || coordinates.length !== 2) {
+                    setIsAddressValid(false);
+                    // setDeliveryCost(null);
+                    return;
+                }
+
+                // Создаем полигоны и проверяем принадлежность
+                let isValid = false;
+                let matchedZone = null;
+
+                for (const zone of deliveryZones) {
+                    const polygon = new ymaps.Polygon([zone.coordinates]);
+                    tempMap.geoObjects.add(polygon);
+
+                    if (polygon.geometry.contains(coordinates)) {
+                        isValid = true;
+                        matchedZone = zone;
+                        break;
+                    }
+                }
+
+                // const baseCost = isValid ?
+                //     matchedZone?.price ?? orderSettings.defaultPrice :
+                //     orderSettings.defaultPrice;
+
+                // Обновляем только базовую стоимость
+                // setBaseDeliveryCost(baseCost);
+                setIsAddressValid(isValid);
+            } catch (error) {
+                console.error('Ошибка валидации:', error);
+                setIsAddressValid(false);
+                // setDeliveryCost(null);
+            } finally {
+                // Уничтожаем временную карту
+                tempMap.destroy();
+            }
+        };
+        validateDeliveryAddress();
+    }, [deliveryAddress]);
 
     /* 
     ===========================
@@ -209,14 +285,14 @@ const AddEditOrderPage = ({ mode }) => {
     };
 
     // Обработчик изменений в полях адреса
-    const handleAddressChange = (field, value) => {
-        setFormData(prev => ({
-            ...prev,
-            address: {
-                ...prev.address,
-                [field]: value
-            }
-        }));
+    const handleAddressChange = (addressData) => {
+        // setFormData(prev => ({
+        //     ...prev,
+        //     address: {
+        //         addressData
+        //     }
+        // }));
+        setDeliveryAddress(addressData);
     };
 
     // Изменение данных в таблице с составом заказа
@@ -413,56 +489,61 @@ const AddEditOrderPage = ({ mode }) => {
                     <section className="add-edit-order-section">
                         <h2 className="add-edit-order-subtitle">Доставка</h2>
 
-                        <div className="order-page-form-group">
+                        <div className="add-edit-order-form-group">
                             {/* Блок адреса */}
                             <div className="add-edit-order-input-group">
                                 <label>Адрес доставки</label>
 
-                                {/* {selectedAddress ? ( */}
-                                {/* <div className="order-address-card" title={!isAddressValid ? 'Изменилась зона доставки. Пожалуйста, обновите адрес.' : null}> */}
-                                {/* <div className={`order-address-content ${!isAddressValid ? 'invalid' : ''}`}> */}
-                                {/* <p className="order-address-main"> */}
-                                {/* {selectedAddress.city}, {selectedAddress.street} {selectedAddress.house}
-                                                {selectedAddress.isPrivateHome && (
-                                                    <span className="order-address-private">Частный дом</span>
-                                                )} */}
-                                {/* </p> */}
-                                {/* {(selectedAddress.apartment && !selectedAddress.isPrivateHome) && (
-                                                <div className="order-address-details">
-                                                    <div>Подъезд: {selectedAddress.entrance}</div>
-                                                    <div>Этаж: {selectedAddress.floor}</div>
-                                                    <div>Квартира: {selectedAddress.apartment}</div>
+                                {deliveryAddress ? (
+                                    <div className="add-edit-order-address-card" title={!isAddressValid ? 'Изменилась зона доставки. Пожалуйста, обновите адрес.' : null}>
+                                        <div className={`add-edit-order-address-content ${!isAddressValid ? 'invalid' : ''}`}>
+                                            <p className="add-edit-order-address-main">
+                                                {deliveryAddress.city}, {deliveryAddress.street} {deliveryAddress.house}
+                                                {deliveryAddress.isPrivateHome && (
+                                                    <span className="add-edit-order-address-private">Частный дом</span>
+                                                )}
+                                            </p>
+                                            {(deliveryAddress.entrance && deliveryAddress.floor && deliveryAddress.apartment && !deliveryAddress.isPrivateHome) && (
+                                                <div className="add-edit-order-address-details">
+                                                    <div>Подъезд: {deliveryAddress.entrance}</div>
+                                                    <div>Этаж: {deliveryAddress.floor}</div>
+                                                    <div>Квартира: {deliveryAddress.apartment}</div>
                                                 </div>
-                                            )} */}
-                                {/* </div> */}
-                                {/* {!isAddressValid && (
-                                            // <div className="address-validation-error">
-                                            //     Адрес вне зоны доставки
-                                            // </div>
-                                        )} */}
-                                {/* <button
-                                            className="order-address-more"
+                                            )}
+                                            {(deliveryAddress.comment) && (
+                                                <div className="add-edit-order-address-comment">
+                                                    <span className="icon">📝</span>
+                                                    {deliveryAddress.comment.slice(0, 150)}{deliveryAddress.comment.length > 150 && '...'}
+                                                </div>
+                                            )}
+                                        </div>
+                                        {!isAddressValid && (
+                                            <div className="add-edit-order-address-validation-error">
+                                                Адрес вне зоны доставки
+                                            </div>
+                                        )}
+                                        <button
+                                            className={`add-edit-order-address-more ${deliveryAddress.comment ? 'add-edit-order-address-more--address-comment' : ''}`}
                                             onClick={() => {
-                                                window.addEventListener('address-updated', handleAddressUpdate);
-                                                openModal('list');
+                                                
                                             }}>
                                             <img src={moreIcon} alt="Изменить" width={16} />
-                                        </button> */}
-                                {/* // </div> */}
-                                {/* ) : ( */}
-                                <button
-                                    className="add-edit-order-add-address"
-                                    onClick={() => {
-                                        setShowAddressOrderModal(true);
-                                        setModeAddressOrderModal('AddEdit');
-                                    }}
-                                >
-                                    + Добавить адрес доставки
-                                </button>
-                                {/* )} */}
-                                {/* {!selectedAddress && errors.address && (
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        className="add-edit-order-add-address"
+                                        onClick={() => {
+                                            setShowAddressOrderModal(true);
+                                            setModeAddressOrderModal('AddEdit');
+                                        }}
+                                    >
+                                        + Добавить адрес доставки
+                                    </button>
+                                )}
+                                {!deliveryAddress && errors.address && (
                                     <span className="error-message">Выберите адрес доставки</span>
-                                )} */}
+                                )}
                             </div>
 
                             {/* Блок даты и времени */}
@@ -555,11 +636,15 @@ const AddEditOrderPage = ({ mode }) => {
                 </div>
             </div>
 
+            {/* Мнимая карта для отображения зоны валидации зон доставки */}
+            <div id="hidden-map"></div>
+
             {/* Модальное окно для управления адресом */}
             <AddressOrderModal
-                mode={modeAddressOrderModal} 
+                mode={modeAddressOrderModal}
                 isOpen={showAddressOrderModal}
                 onCancel={() => setShowAddressOrderModal(false)}
+                onSave={(addressData) => handleAddressChange(addressData)}
             />
 
             {/* Модальное окно для добавления товаров в заказ */}

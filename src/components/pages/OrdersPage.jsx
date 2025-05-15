@@ -205,7 +205,7 @@ const OrdersPage = () => {
         };
     });
 
-    // Обновление данные на странице (Иконка)
+    // Обновление данные на странице (Иконка). Без сброса страницы списка пагинации
     const refreshData = async () => {
         // Обновляем активные фильтры
         setActiveFilters(prev => {
@@ -415,6 +415,7 @@ const OrdersPage = () => {
                 sort: filterState.formData.sort
             };
 
+            setCurrentPage(0); // Сброс номера страницы списка пагинации
             searchInputRef.current?.clear(); // Очистка поля поиска
 
             // Сохраняем значения полей фильтра
@@ -432,6 +433,7 @@ const OrdersPage = () => {
         setIsLoading(true);
         try {
             searchInputRef.current?.clear(); // Очистка поля поиска
+            setCurrentPage(0); // Сброс номера страницы списка пагинации
 
             setFilterState(prev => ({
                 ...prev,
@@ -492,6 +494,7 @@ const OrdersPage = () => {
                 ...filterState,
                 formData: formDataWithoutSearch
             };
+            setCurrentPage(0); // Сброс номера страницы списка пагинации
 
             // Сохраняем в localStorage
             saveFilterState(newFilterState);

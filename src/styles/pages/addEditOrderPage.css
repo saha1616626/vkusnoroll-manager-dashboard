@@ -130,7 +130,13 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+}
 
+/* Ошибка в разеделе "Способ оплаты" */
+.add-edit-order-payment-methods .add-edit-order-error {
+    padding: 0.5rem;
+    border-radius: 6px;
+    background: #fff5f5;
 }
 
 /* Группа радиокнопки и текста */
@@ -227,6 +233,127 @@
     color: #2d3436;
 }
 
+/* Контейнер адреса доставки */
+.add-edit-order-address-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.3s;
+}
+
+.add-edit-order-address-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+}
+
+/* Карточка адреса */
+.add-edit-order-address-content {
+    flex-grow: 1;
+    margin-right: 1rem;
+}
+
+/* Невалидный адрес */
+.add-edit-order-address-content.invalid {
+    opacity: 0.7;
+}
+
+/* Основное содержимое адреса */
+.add-edit-order-address-main {
+    margin: 0;
+    font-weight: 500;
+    color: #2d3436;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Пометка "Частный дом" */
+.add-edit-order-address-private {
+    background: #ffeaa7;
+    color: #e17055;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+/* Адаптация пустых блоков */
+.add-edit-order-address-details:empty,
+.add-edit-order-address-comment:empty {
+    display: none;
+}
+
+/* Дополнительная информация об адресе */
+.add-edit-order-address-details {
+    margin: 8px 0 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #636e72;
+    display: flex;
+    gap: 10px;
+}
+
+.add-edit-order-address-details div {
+    background: #ffeaa7;
+    /* color: #e17055; */
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+/* Комментарий */
+.add-edit-order-address-comment {
+    width: calc(100% + 12px);
+    margin-top: 16px;
+    padding: 12px 12px;
+    background: #dfe0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #333333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-left: 3px solid #74b9ff;
+}
+
+/* Пометка о невалидности адреса */
+.add-edit-order-address-validation-error {
+    position: relative;
+    right: 20px;
+    justify-content: left;
+    background: #ff6b6b;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+/* Кнопка для взаимодействия с выбранным адресом */
+.add-edit-order-address-more {
+    display: flex;
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    opacity: 1 !important;
+}
+
+.add-edit-order-address-more:hover {
+    transform: scale(1.04);
+    background-color: #7f81831c;
+    border-radius: 5px;
+}
+
+/* Если в выбранном адресе указан комментарий */
+.add-edit-order-address-more--address-comment {
+    align-items: start;
+    margin-bottom: 5rem;
+}
+
 /* Поле стоимости доставки */
 .add-edit-order-delivery-price {
     display: flex;
@@ -238,6 +365,14 @@
 
 .add-edit-order-delivery-price input {
     flex: 1;
+}
+
+/* Сообщение об ошибке */
+.add-edit-order-error {
+    color: #ff6b6b;
+    font-size: 0.8rem;
+    margin-top: 4px;
+    display: block;
 }
 
 /* --------------- */

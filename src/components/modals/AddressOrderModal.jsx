@@ -16,7 +16,7 @@ import './../../styles/modals/addressOrderModal.css'
 import crossIcon from './../../assets/icons/cross.png'; // Крестик
 import warningIcon from './../../assets/icons/warning.png';
 
-const AddressOrderModal = ({ mode, isOpen, onCancel }) => {
+const AddressOrderModal = ({ mode, isOpen, onCancel, onSave }) => {
 
     /* 
     ================================
@@ -30,7 +30,17 @@ const AddressOrderModal = ({ mode, isOpen, onCancel }) => {
     const [searchQuery, setSearchQuery] = useState(''); // Запрос для поиска адреса
     const [suggestionsShow, setSuggestionsShow] = useState(false); // Отображение подсказки при вводе адреса
     const [suggestions, setSuggestions] = useState([]); // Выбор адреса в списке подсказки
-    const [formData, setFormData] = useState([]); // Поля формы
+    const dataTemplate = {
+        city: '',
+        street: '',
+        house: '',
+        isPrivateHome: false,
+        entrance: '',
+        floor: '',
+        apartment: '',
+        comment: ''
+    }; // Шаблон адреса
+    const [formData, setFormData] = useState(dataTemplate); // Поля формы
     const [isSaving, setIsSaving] = useState(false); // Статус сохранения адреса
     const [isZonesLoading, setIsZonesLoading] = useState(true); // Состояние загрузки зон доставки
     const [deliveryZones, setDeliveryZones] = useState([]); // Зоны доставки из БД
@@ -89,6 +99,16 @@ const AddressOrderModal = ({ mode, isOpen, onCancel }) => {
         }, 3000);
     }, []);
 
+    // Сброс адреса при закрытии окна
+    useEffect(() => {
+        if (!isOpen) {
+            setEditedAddress(dataTemplate);
+            setFormData(dataTemplate);
+            setSearchQuery(''); // Поиск
+            setSuggestions([]); // Очищаем список адресов в подсказе поиска
+        }
+    }, [onCancel]);
+
     /* 
     ===========================
      Управление картой
@@ -115,8 +135,8 @@ const AddressOrderModal = ({ mode, isOpen, onCancel }) => {
         }
     }, [isOpen, isReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Валидация зоны доставки
-    const validateDeliveryZone = async (coordinates) => {
+    // Валидация адреса для существующих зон
+    const validateDeliveryAddress = async (coordinates) => {
         if (!ymaps || deliveryZones.length === 0) return false;
 
         try {
@@ -223,7 +243,7 @@ const AddressOrderModal = ({ mode, isOpen, onCancel }) => {
                     }
 
                     // Валидация выбранного адреса
-                    const isValidZone = await validateDeliveryZone(coordinates);
+                    const isValidZone = await validateDeliveryAddress(coordinates);
                     if (!isValidZone) {
                         setZoneError('Внимание, адрес вне зоны доставки');
                     } else {
@@ -360,7 +380,7 @@ const AddressOrderModal = ({ mode, isOpen, onCancel }) => {
         setSuggestions([]); // Очищаем список адресов в подсказе поиска
 
         // Валидация выбранного адреса
-        const isValidZone = await validateDeliveryZone(suggestion.coordinates);
+        const isValidZone = await validateDeliveryAddress(suggestion.coordinates);
         if (!isValidZone) {
             setZoneError('Внимание, адрес вне зоны доставки');
         } else {
@@ -440,7 +460,56 @@ const AddressOrderModal = ({ mode, isOpen, onCancel }) => {
 
     // Сохранение адреса
     const handleSaveAddress = async () => {
+        if (!editedAddress?.coordinates) {
+            addLocalNotification('Выберите адрес на карте или введите запрос');
+            return;
+        }
 
+        // Проверка обязательных полей: город, улица, дом
+        if (!formData.city?.trim() || !formData.street?.trim() || !formData.house?.trim()) {
+            addLocalNotification('Заполните город, улицу и дом');
+            return;
+        }
+
+        // Если isPrivateHome === false, проверяем дополнительные поля
+        if (!formData.isPrivateHome) {
+            const requiredFields = ['entrance', 'floor', 'apartment'];
+            const missingFields = requiredFields.filter(field => !formData[field]?.trim());
+            if (missingFields.length > 0) {
+                addLocalNotification('Заполните подъезд, этаж и квартиру');
+                return;
+            }
+        }
+
+        try {
+            const [latitude, longitude] = editedAddress.coordinates; // Устанавливаем координаты
+
+            // Подготовка данных для отправки
+            const dataToSend = {
+                accountId: null,
+                city: formData.city.trim(),
+                street: formData.street.trim(),
+                house: formData.house.trim(),
+                isPrivateHome: formData.isPrivateHome,
+                entrance: formData.entrance?.trim() || null,
+                floor: formData.floor?.trim() || null,
+                apartment: formData.apartment?.trim() || null,
+                comment: formData.comment?.trim() || null,
+                latitude,
+                longitude
+            };
+
+            // Передаем сохраняемый адрес в родителя
+            if (onSave) {
+                onSave(dataToSend);
+            }
+            onCancel(); // Закрываем модальное окно
+        } catch (error) {
+            console.error('Ошибка сохранения:', error);
+            addLocalNotification(error.response.data.error || 'Не удалось сохранить адрес');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     /* 

@@ -337,7 +337,7 @@
 /* Пометка о невалидности адреса */
 .add-edit-order-address-validation-error {
     position: relative;
-    right: 20px;
+    /* right: 20px; */
     justify-content: left;
     background: #ff6b6b;
     color: white;
@@ -369,13 +369,44 @@
     margin-bottom: 5rem;
 }
 
+/* Контейнер кнопок действий меню */
+.add-edit-order-address-card-menu {
+    position: absolute;
+    right: 1rem;
+    top: 3rem;
+    background: white;
+    border: 1px solid #dfe6e9;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+/* Кнопка дейстия меню */
+.add-edit-order-address-card-menu-item {
+    display: block;
+    width: 100%;
+    padding: 8px 16px;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+}
+
+.add-edit-order-address-card-menu-item:hover {
+    background: #f8f9fa;
+}
+
+.add-edit-order-address-card-menu-item.delete {
+    color: #e74c3c;
+}
+
 /* Поле стоимости доставки */
 .add-edit-order-delivery-price {
     display: flex;
-    gap: 1rem;
+    /* gap: 1rem; */
     align-items: center;
-    padding-top: 1.5rem;
-    border-top: 1px solid #e9ecef;
+    /* padding-top: 1.5rem; */
+    /* border-top: 1px solid #e9ecef; */
 }
 
 .add-edit-order-delivery-price input {
@@ -471,6 +502,22 @@
     margin-top: 1rem;
     border-top: 2px solid #eee;
 }
+
+/* Сообщение о сумме до бесплатной доставки */
+.add-edit-order-delivery-message {
+    padding: 0.5rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+/*  Осталось до бесплатной доставки */
+.add-edit-order-delivery-message.info {
+    background: #fff3cd;
+    color: #856404;
+    text-align: center;
+}
+
 
 /* ================================== */
 /* Блок статусов заказа и оплаты */
@@ -601,5 +648,11 @@
     .add-edit-order-top-group {
         grid-template-columns: 1fr;
         gap: 1rem;
+    }
+
+    /* Контейнер кнопок действий меню */
+    .add-edit-order-address-card-menu {
+        right: 0.5rem;
+        top: 2.5rem;
     }
 }

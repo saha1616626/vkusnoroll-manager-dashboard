@@ -60,6 +60,9 @@ const apiMethods = {
     getDeliveryZones: () => api.get('/deliverySettings/delivery-zones'), // Зоны доставки
     getOrderSettings: () => api.get('/deliverySettings/order-settings'), // Получаем все необходимые данные для формирования заказа
 
+    // Рабочее время ресторана
+    getNextSevenDaysSchedule: () => api.get(`/deliveryWork/next-seven-days`), // Получить график работы на следующие 7 дней
+
 };
 
 // Экспортируем объект по умолчанию

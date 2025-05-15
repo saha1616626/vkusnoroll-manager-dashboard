@@ -10,14 +10,15 @@ import api from '../../utils/api';  // API сервера
 import OrderCompositionTable from '../ui/OrderCompositionTable'; // Таблица для манипуляций над составом заказов
 import OrderAddItemsModal from '../modals/OrderAddItemsModal'; // Модальное окно для добавления товаров в заказ
 import AddressOrderModal from '../modals/AddressOrderModal'; // Модальное окно для управления адресом
+import DeliveryTimeOrderModal from '../modals/DeliveryTimeOrderModal'; // Модальное окно для управления датой и временем доставки
 
 // Импорт иконок
 import deleteIcon from './../../assets/icons/delete.png'
 import moreIcon from './../../assets/icons/moreVertical.png';
+import calendarIcon from './../../assets/icons/calendar.png'; // Календарь
 
 // Импорт стилей
 import './../../styles/pages/addEditOrderPage.css'
-
 
 const AddEditOrderPage = ({ mode }) => {
 
@@ -49,6 +50,7 @@ const AddEditOrderPage = ({ mode }) => {
             apartment: '',
             comment: ''
         },
+        comment: ''
     });
     const [orderItems, setOrderItems] = useState([]);  // Товары в заказе
 
@@ -69,6 +71,21 @@ const AddEditOrderPage = ({ mode }) => {
     const [modeAddressOrderModal, setModeAddressOrderModal] = useState('AddEdit'); // Режим отображения модального окна
     const [showAddModal, setShowAddModal] = useState(false); // Управление отображением модального окна для добавления товара
     const [selectedRows, setSelectedRows] = useState([]); // Выбранные строки в таблице
+
+    const [isDeliveryTimeModalOpen, setIsDeliveryTimeModalOpen] = useState(false); // Модальное окно выбора даты и времени доставки
+    const [deliverySchedule, setDeliverySchedule] = useState([]); // График работы доставки на ближайшие 7 дней
+    const [currentServerTime, setCurrentServerTime] = useState(null); // Текущее время по МСК
+    const [deliveryInterval, setDeliveryInterval] = useState(''); // Интервал для доставки заказа
+    const [deliveryDate, setDeliveryDate] = useState(''); // Дата доставки
+    const [deliveryTime, setDeliveryTime] = useState(''); // Время доставки
+    const [orderSettings, setOrderSettings] = useState({ // Детали стоимости доставки
+        defaultPrice: 0,
+        isFreeDelivery: false,
+        freeThreshold: 0
+    });
+
+
+    const [refreshKey, setRefreshKey] = useState(0); // Для принудительного обновления данных на странице по таймеру
 
     /* 
     ==============================
@@ -187,83 +204,59 @@ const AddEditOrderPage = ({ mode }) => {
     ===========================
     */
 
-    // Эффект для инициализации карты
+    // Получаем и устанавливаем расписание работы доставки
     useEffect(() => {
-        if (!ymaps || !isReady || !document.getElementById('add-edit-order-map')) return; // Если карта не загружена или окно не открыто
-        // Устанавливаем карту
-        ymaps.ready(() => {
-            // Уничтожаем предыдущую карту, если она существует
-            if (mapRef.current) mapRef.current.destroy();
+        const loadDeliverySchedule = async () => {
+            try {
+                const response = await api.getNextSevenDaysSchedule();
+                setDeliverySchedule(response.data);
 
-            // Создаем новую карту и сохраняем в ref
-            const newMap = new ymaps.Map('add-edit-order-map', {
-                center: [56.129057, 40.406635],
-                zoom: 12.5,
-                controls: ['zoomControl']
-            });
-
-            // Обработчик клика по карте
-            const clickListener = async (e) => {
-                try {
-                    const coordinates = e.get('coords');
-                    const address = await reverseGeocode(coordinates);
-
-                    // Дополнительное геокодирование для получения компонентов
-                    const geocode = await ymaps.geocode(address, { results: 1 });
-                    const firstGeoObject = geocode.geoObjects.get(0);
-
-                    if (!firstGeoObject) {
-                        throw new Error('Адрес не найден');
-                    }
-
-                    // Центрируем карту на координатах из БД
-                    if (mapRef.current) {
-                        mapRef.current.setCenter(coordinates, 17, {
-                            duration: 1000,
-                            checkZoomRange: true,
-                            timingFunction: 'ease-in-out'
-                        });
-                    }
-
-                    const addressComponents = firstGeoObject.properties.get('metaDataProperty.GeocoderMetaData.Address.Components');
-
-                    const newFormData = {
-                        city: addressComponents.find(c => c.kind === 'locality')?.name || '',
-                        street: addressComponents.find(c => c.kind === 'street')?.name || addressComponents.find(c => c.kind === 'district')?.name || '',
-                        house: addressComponents.find(c => c.kind === 'house')?.name || '',
-                        isPrivateHome: false, // Сохраняем текущее значение
-                        entrance: formData.entrance,
-                        floor: formData.floor,
-                        apartment: formData.apartment,
-                        comment: formData.comment
-                    };
-
-                    // Обновляем состояние
-                    setFormData(prev => ({ ...prev, address: newFormData }))
-
-                    // setSearchQuery(address);
-                    // setEditedAddress({ displayName: address, coordinates });
-                } catch (error) {
-                    console.error('Ошибка обработки клика:', error);
-                    addLocalNotification('Ошибка определения адреса');
+                // Автовыбор первой доступной даты
+                const firstWorkingDay = response.data.find(d => d.isWorking);
+                if (firstWorkingDay) {
+                    setDeliveryDate(firstWorkingDay.date);
                 }
-            };
-
-            newMap.events.add('click', clickListener); // Добавляем слушатель
-
-            // Добавляем объекты карты в ref
-            mapRef.current = {
-                map: newMap,
-                geoObjects: newMap.geoObjects,
-                events: newMap.events,
-                setCenter: newMap.setCenter.bind(newMap),
-                destroy: () => {
-                    newMap.events.remove('click', clickListener);
-                    newMap.destroy();
+            } catch (error) {
+                console.error('Ошибка загрузки расписания:', error);
+                if (window.history.length > 1) { // В случае ошибки происходит маршрутизация на предыдущую страницу или в меню
+                    window.history.back();
+                } else {
+                    window.location.href = '/menu';
                 }
-            };
-        });
-    }, [ymaps]); // eslint-disable-line react-hooks/exhaustive-deps 
+            }
+        };
+
+        loadDeliverySchedule();
+    }, []);
+
+    // Получаем все необходимые данные для формирования заказа
+    useEffect(() => {
+        const loadOrderSettings = async () => {
+            try {
+                const response = await api.getOrderSettings();
+                const {
+                    defaultPrice,
+                    isFreeDelivery,
+                    freeThreshold,
+                    interval,
+                    serverTime // Время в формате ISO
+                } = response.data;
+
+                setOrderSettings({ // Получаем детали стоимости доставки
+                    defaultPrice: defaultPrice || 0,
+                    isFreeDelivery: Boolean(isFreeDelivery),
+                    freeThreshold: Math.max(Number(freeThreshold) || 0, 0)
+                });
+                setDeliveryInterval(interval); // Интервал доставки
+                setCurrentServerTime(new Date(serverTime)); // Устанавливаем текущее время по Москве из БД
+            } catch (error) {
+                console.error('Ошибка загрузки настроек заказа:', error);
+            }
+        };
+
+        loadOrderSettings();
+    }, []);
+
 
     /* 
     ===========================
@@ -407,9 +400,13 @@ const AddEditOrderPage = ({ mode }) => {
                                 />
                             </div>
 
-                            <div className="add-edit-order-input-group">
+                            <div className="add-edit-order-input-group"
+                                style={{ // Комментарий отображается, только если он есть и в режиме редактирования.
+                                    display: mode === 'add' || !formData.comment ? 'none' : ''
+                                }}
+                            >
                                 <label>Комментарий клиента</label>
-                                <textarea className="add-edit-order-textarea" />
+                                <textarea className="add-edit-order-textarea" disabled />
                             </div>
                         </div>
                     </section>
@@ -466,7 +463,7 @@ const AddEditOrderPage = ({ mode }) => {
                                                 <span className="add-edit-order-currency">₽</span>
                                             </div>
                                             {formData.changeAmount && formData.changeAmount < total && (
-                                                <p className="add-edit-order-error">
+                                                <p className="add-edit-order-error-message">
                                                     Сумма должна быть не меньше {total}₽ или оставьте поле пустым
                                                 </p>
                                             )}
@@ -474,14 +471,6 @@ const AddEditOrderPage = ({ mode }) => {
                                     )}
                                 </div>
                             ))}
-                        </div>
-                    </section>
-
-                    {/* Комментарий менеджера */}
-                    <section className="add-edit-order-section">
-                        <div className="add-edit-order-input-group">
-                            <label>Комментарий менеджера</label>
-                            <textarea className="add-edit-order-textarea" />
                         </div>
                     </section>
 
@@ -525,7 +514,7 @@ const AddEditOrderPage = ({ mode }) => {
                                         <button
                                             className={`add-edit-order-address-more ${deliveryAddress.comment ? 'add-edit-order-address-more--address-comment' : ''}`}
                                             onClick={() => {
-                                                
+
                                             }}>
                                             <img src={moreIcon} alt="Изменить" width={16} />
                                         </button>
@@ -542,26 +531,26 @@ const AddEditOrderPage = ({ mode }) => {
                                     </button>
                                 )}
                                 {!deliveryAddress && errors.address && (
-                                    <span className="error-message">Выберите адрес доставки</span>
+                                    <span className="add-edit-order-error-message">Выберите адрес доставки</span>
                                 )}
                             </div>
 
                             {/* Блок даты и времени */}
-                            <div className="order-page-input-group">
-                                {/* <label className="order-page-label">Дата и время доставки</label> */}
-                                <div className="order-delivery-time-group">
+                            <div className="add-edit-order-input-group">
+                                <label>Дата и время доставки</label>
+                                <div className="add-edit-order-delivery-time-group">
                                     <button
-                                        className="order-page-time-select-btn"
-                                    // onClick={() => setIsTimeModalOpen(true)}
+                                        className="add-edit-order-time-select-btn"
+                                        onClick={() => setIsDeliveryTimeModalOpen(true)}
                                     >
-                                        {/* <img src={calendarIcon} alt="Календарь" width={20} />
+                                        <img src={calendarIcon} alt="Календарь" width={20} />
                                         {deliveryDate && deliveryTime
                                             ? `${new Date(deliveryDate).toLocaleDateString('ru-RU')} ${deliveryTime}`
-                                            : "Выбрать дату и время"} */}
+                                            : "Выбрать дату и время"}
                                     </button>
                                 </div>
                                 {errors.datetime && (
-                                    <span className="error-message">Выберите дату и время доставки</span>
+                                    <span className="add-edit-order-error-message">Выберите дату и время доставки</span>
                                 )}
                             </div>
                         </div>
@@ -611,6 +600,14 @@ const AddEditOrderPage = ({ mode }) => {
                             />
                         </div>
                     </section>
+
+                    {/* Комментарий менеджера */}
+                    <section className="add-edit-order-section">
+                        <div className="add-edit-order-input-group">
+                            <label>Комментарий менеджера</label>
+                            <textarea className="add-edit-order-textarea" />
+                        </div>
+                    </section>
                 </div>
 
                 {/* Правая колонка - суммарная информация */}
@@ -645,6 +642,20 @@ const AddEditOrderPage = ({ mode }) => {
                 isOpen={showAddressOrderModal}
                 onCancel={() => setShowAddressOrderModal(false)}
                 onSave={(addressData) => handleAddressChange(addressData)}
+            />
+
+            {/* Модальное окно выбра даты и интервала доставки в заказе */}
+            <DeliveryTimeOrderModal
+                isOpen={isDeliveryTimeModalOpen}
+                onCancel={() => setIsDeliveryTimeModalOpen(false)}
+                deliverySchedule={deliverySchedule}
+                currentServerTime={currentServerTime}
+                deliveryInterval={deliveryInterval}
+                onSelect={(date, time) => {
+                    setDeliveryDate(date);
+                    setDeliveryTime(time);
+                }}
+                refreshKey={refreshKey}
             />
 
             {/* Модальное окно для добавления товаров в заказ */}

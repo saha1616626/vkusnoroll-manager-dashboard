@@ -1,0 +1,186 @@
+/* Стили модального окна для управления датой и временем доставки в заказе */
+
+/* Стили для модального окна выбра даты и интервала доставки в заказе */
+
+/* Блокировка скролла */
+body.no-scroll {
+    overflow: hidden;
+}
+
+/* Пространство за модальным окном */
+.delivery-time-order-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(2px);
+}
+
+/* Модальное окно */
+.delivery-time-order-modal-container {
+    background: white;
+    width: 90%;
+    max-width: 600px;
+    border-radius: 12px;
+    padding: 2rem;
+    position: relative;
+}
+
+/* Закрыть окно */
+.delivery-time-order-modal-close-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    opacity: 0.7;
+    border-radius: 10px;
+    background-color: rgba(170, 168, 168, 0.295);
+}
+
+/* Крестик иконка */
+.delivery-time-order-modal-close-button img {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+}
+
+.delivery-time-order-modal-close-button:hover {
+    transform: translateY(-2px);
+    opacity: 1;
+}
+
+/* Заголовок */
+.delivery-time-order-modal-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: #2d3436;
+}
+
+/* Содержимое окна под заголовком */
+.delivery-time-order-modal-content {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: 1fr 1fr;
+}
+
+/* Выбор даты */
+.delivery-time-order-modal-calendar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+/* Кнопка для выбора дня */
+.delivery-time-order-modal-day {
+    padding: 1rem 0rem;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+/* Кнопка нажата */
+.delivery-time-order-modal-day.selected {
+    border-color: #20b92d;
+    background: #f0fff4;
+    transition: ease-in-out 0.1s;
+    font-weight: 500;
+}
+
+/* Кнопка не нажата */
+.delivery-time-order-modal-day.disabled {
+    background: #f8f9fa;
+    color: #adb5bd;
+    cursor: not-allowed;
+}
+
+/* Выбор временного интервала */
+.delivery-time-order-modal-time-slots {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Кнопка для выбора времени */
+.delivery-time-order-modal-slot {
+    padding: 0.8rem;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+/* Кнопка нажата */
+.delivery-time-order-modal-slot.selected {
+    border-color: #20b92d;
+    background: #f0fff4;
+    transition: ease-in-out 0.1s;
+    font-weight: 500;
+}
+
+/* Кнопка подтверждения выбора */
+.delivery-time-order-modal-confirm-btn {
+    width: 100%;
+    padding: 1rem;
+    background: #20b92d;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    margin-top: 1.5rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-weight: 500;
+}
+
+/* Кнопка подтверждения выбора в недоступном состоянии */
+.delivery-time-order-modal-confirm-btn:disabled {
+    background: #adb5bd;
+    cursor: not-allowed;
+}
+
+/* Сообщение об отсутствии временных слотов */
+.delivery-time-order-modal-no-slots {
+    text-align: center;
+    align-content: center;
+    padding: 1rem;
+    color: #e74c3c;
+    grid-column: span 2;
+    font-weight: 500;
+}
+
+/* Адаптация */
+@media (max-width: 768px) {
+
+    /* Содержимое окна под заголовком */
+    .delivery-time-order-modal-content {
+        grid-template-columns: 1fr;
+    }
+
+    /* Выбор даты */
+    .delivery-time-order-modal-calendar {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

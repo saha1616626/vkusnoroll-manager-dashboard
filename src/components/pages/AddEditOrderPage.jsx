@@ -894,8 +894,8 @@ const AddEditOrderPage = ({ mode }) => {
                                                     onChange={() => {
                                                         setFormData(prev => ({ ...prev, paymentMethod: method }));
                                                         if (method !== 'Наличные') setIsCashExpanded(false);
-                                                        else setIsCashExpanded(true);
                                                     }}
+                                                    onClick={() => { if (method === 'Наличные') setIsCashExpanded(!isCashExpanded) }}
                                                 />
                                                 <span className="add-edit-order-payment-text">{method}</span>
 

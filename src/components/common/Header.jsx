@@ -195,7 +195,6 @@ const Header = () => {
             navigate(path);
         };
 
-
         // Проверка на несохраненные изменения
         if (sessionStorage.getItem('isDirty') === 'true') { // На false isDirty при выходе без сохранения менять не нужно, так как компонент размонтируется и удалит состоние isDirty в localStorage
             setPendingNavigation(() => checkNavigation);
@@ -310,7 +309,15 @@ const Header = () => {
                                             <div key={notification.id} className="order-notification-item">
                                                 <div className="order-notification-content"
                                                     // Переход на страницу с заказом
-                                                    onClick={() => handleNavigationOrder(`/orders/edit/${notification.id}`)}>
+                                                    onClick={() => {
+                                                        // Проверка на наличие несохраненных изменений
+                                                        if (sessionStorage.getItem('isDirty') === 'true') { // На false isDirty при выходе без сохранения менять не нужно, так как компонент размонтируется и удалит состоние isDirty в localStorage
+                                                            setPendingNavigation(() => () => handleNavigationOrder(`/orders/edit/${notification.id}`));
+                                                            setShowNavigationConfirmModal(true);
+                                                        } else {
+                                                            handleNavigationOrder(`/orders/edit/${notification.id}`)
+                                                        }
+                                                    }}>
                                                     <span>{notification.text}</span>
                                                     <small>{notification.date}</small>
                                                 </div>

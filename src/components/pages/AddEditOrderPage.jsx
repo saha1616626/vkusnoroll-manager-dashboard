@@ -387,7 +387,6 @@ const AddEditOrderPage = ({ mode }) => {
                 e.preventDefault();
                 setPendingNavigation(() => () => { //  Подтверждение перехода
                     goBackOrRedirect(); // Возврат пользователя на страницу назад, если она есть в истории
-                    setIsDirty(false);
                 });
                 setShowNavigationConfirmModal(true); // Показываем модальное окно подтверждения
             }
@@ -426,6 +425,7 @@ const AddEditOrderPage = ({ mode }) => {
 
     // Возврат пользователя на страницу назад, если она есть в истории
     const goBackOrRedirect = async () => {
+        setIsDirty(false); // Убираем несохраненные изменения
         if (window.history.length > 1) {
             navigate(-1);
         } else {

@@ -16,6 +16,8 @@ import DeliveryTimeOrderModal from '../modals/DeliveryTimeOrderModal'; // Мод
 import deleteIcon from './../../assets/icons/delete.png'
 import moreIcon from './../../assets/icons/moreVertical.png';
 import calendarIcon from './../../assets/icons/calendar.png'; // Календарь
+import autoIcon from './../../assets/icons/auto.png';
+import exchangeIcon from './../../assets/icons/exchange.png';
 
 // Импорт стилей
 import './../../styles/pages/addEditOrderPage.css'
@@ -69,9 +71,9 @@ const AddEditOrderPage = ({ mode }) => {
 
     const [deliveryZones, setDeliveryZones] = useState([]); // Зоны доставки
     const [deliveryAddress, setDeliveryAddress] = useState(null); // Адрес доставки
-    const [isAddressValid, setIsAddressValid] = useState(false); // Статус валидации адреса доставки
+    const [isAddressValid, setIsAddressValid] = useState(true); // Статус валидации адреса доставки
     const [showAddressOrderModal, setShowAddressOrderModal] = useState(false); // Управление отображением модального окна для управления адресом доставки
-    const [modeAddressOrderModal, setModeAddressOrderModal] = useState('AddEdit'); // Режим отображения модального окна
+    const [modeAddressOrderModal, setModeAddressOrderModal] = useState('Add'); // Режим отображения модального окна
     const [showAddModal, setShowAddModal] = useState(false); // Управление отображением модального окна для добавления товара
     const [selectedRows, setSelectedRows] = useState([]); // Выбранные строки в таблице
 
@@ -86,8 +88,9 @@ const AddEditOrderPage = ({ mode }) => {
         isFreeDelivery: false,
         freeThreshold: 0
     });
-    const [orderStatuses, setOrderStatuses] = useState([]);
+    const [orderStatuses, setOrderStatuses] = useState([]); // Статусы заказов
     const [localDeliveryCost, setLocalDeliveryCost] = useState(''); // Стоимость доставки для ручного ввода в поле
+    const [isAutomaticModeCalculatingCostDelivery, setIsAutomaticModeCalculatingCostDelivery] = useState(true); // Включен ли режим автоматического расчета стоимости доставки (По умолчанию - Да)
     const [baseDeliveryCost, setBaseDeliveryCost] = useState(''); // Базовая стоимость доставки (из зоны)
     const [freeDeliveryMessage, setFreeDeliveryMessage] = useState(''); // Сообщение о бесплатной доставке или ее условиях
     const [showAddressMenu, setShowAddressMenu] = useState(false); // Меню для редактирования и просмотра адреса
@@ -131,24 +134,6 @@ const AddEditOrderPage = ({ mode }) => {
         };
         loadZones();
     }, []);
-
-    //  Геокодирование адреса (Из координат в текст)
-    const reverseGeocode = async (coordinates) => {
-        try {
-            const geocode = await ymaps.geocode(coordinates, {
-                kind: 'house',
-                results: 1,
-                boundedBy: mapRef.current.map.getBounds() // Не сможет определить объект при слишком отдаленном расстоянии от объекта
-            });
-
-            const firstGeoObject = geocode.geoObjects.get(0);
-            return firstGeoObject?.getAddressLine() || '';
-        } catch (error) {
-            console.error('Ошибка обратного геокодирования:', error);
-            addLocalNotification('Ошибка получения адреса');
-            return '';
-        }
-    };
 
     // Валидация адреса для существующих зон
     useEffect(() => {
@@ -203,10 +188,20 @@ const AddEditOrderPage = ({ mode }) => {
             }
         };
         validateDeliveryAddress();
-    }, [deliveryAddress]);
+    }, [deliveryAddress]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Расчет итоговой стоимости доставки и информирование пользователя сообщением
     const calculateFinalDeliveryCost = async () => {
+
+        // Если адрес доставки не указан
+        if (!deliveryAddress) {
+            setFormData(prev => ({
+                ...prev,
+                deliveryCost: 0
+            }));
+            return;
+        }
+
         if (!orderSettings.freeThreshold && orderSettings.freeThreshold !== 0) return;
 
         const subtotal = orderItems
@@ -238,8 +233,17 @@ const AddEditOrderPage = ({ mode }) => {
 
     // Обновление итоговой стоимости доставки
     useEffect(() => {
-        calculateFinalDeliveryCost();
-    }, [baseDeliveryCost, orderItems]);
+        if (isAutomaticModeCalculatingCostDelivery) { // Авторасчет стоимости доставки только в автоматическом режиме
+            calculateFinalDeliveryCost();
+        }
+        else {
+            // Сброс стоимости доставки для ручного ввода
+            setFormData(prev => ({
+                ...prev,
+                deliveryCost: 0
+            }));
+        }
+    }, [orderItems, baseDeliveryCost, isAutomaticModeCalculatingCostDelivery]); // eslint-disable-line react-hooks/exhaustive-deps
 
     /* 
     ===========================
@@ -347,6 +351,18 @@ const AddEditOrderPage = ({ mode }) => {
         setLocalDeliveryCost(formData.deliveryCost.toString());
     }, [formData.deliveryCost]);
 
+    // Закрываем меню для редактирования и просмотра адреса
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (addressMenuRef.current && !addressMenuRef.current.contains(event.target) && showAddressMenu) {
+                setShowAddressMenu(false); // Закрываем меню
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showAddressMenu]);
+
     /* 
     ===========================
      Обработчики событий
@@ -378,7 +394,9 @@ const AddEditOrderPage = ({ mode }) => {
                 entrance: addressData.entrance || '',
                 floor: addressData.floor || '',
                 apartment: addressData.apartment || '',
-                comment: addressData.comment || ''
+                comment: addressData.comment || '',
+                latitude: addressData.latitude,
+                longitude: addressData.longitude
             }
         }));
 
@@ -591,7 +609,7 @@ const AddEditOrderPage = ({ mode }) => {
                                     </div>
 
                                     {deliveryAddress ? (
-                                        <div className="add-edit-order-address-card" title={!isAddressValid ? 'Изменилась зона доставки. Пожалуйста, обновите адрес.' : null}>
+                                        <div className="add-edit-order-address-card" title={!isAddressValid ? 'Изменилась зона доставки. Пожалуйста, проверьте адрес.' : null}>
                                             <div className={`add-edit-order-address-content ${!isAddressValid ? 'invalid' : ''}`}>
                                                 <p className="add-edit-order-address-main">
                                                     {deliveryAddress.city}, {deliveryAddress.street} {deliveryAddress.house}
@@ -630,21 +648,23 @@ const AddEditOrderPage = ({ mode }) => {
                                             {/* TODO - меню улетает */}
                                             {showAddressMenu && (
                                                 <div className="add-edit-order-address-card-menu" ref={addressMenuRef}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation(); // Останавливаем распространение события radio
-                                                    }}>
+                                                    style={{
+                                                        top: deliveryAddress.comment ? '35%' :
+                                                            !deliveryAddress.comment && !deliveryAddress.isPrivateHome ? '75%' : ''
+                                                    }}
+                                                >
                                                     <button className="add-edit-order-address-card-menu-item"
                                                         onClick={() => {
-                                                            modeAddressOrderModal('AddEdit');
-                                                            setShowAddModal(true);
+                                                            setShowAddressOrderModal(true);
+                                                            setModeAddressOrderModal('Edit');
                                                         }}
                                                     >
                                                         Редактировать
                                                     </button>
                                                     <button className="add-edit-order-address-card-menu-item"
                                                         onClick={() => {
-                                                            modeAddressOrderModal('View');
-                                                            setShowAddModal(true);
+                                                            setShowAddressOrderModal(true);
+                                                            setModeAddressOrderModal('View');
                                                         }}
                                                     >
                                                         Просмотреть
@@ -658,7 +678,7 @@ const AddEditOrderPage = ({ mode }) => {
                                             className="add-edit-order-add-address"
                                             onClick={() => {
                                                 setShowAddressOrderModal(true);
-                                                setModeAddressOrderModal('AddEdit');
+                                                setModeAddressOrderModal('Add');
                                             }}
                                         >
                                             + Добавить адрес доставки
@@ -669,42 +689,53 @@ const AddEditOrderPage = ({ mode }) => {
                                     )}
                                 </div>
 
-                                {/* Блок даты и времени */}
-                                <div className="add-edit-order-input-group">
-                                    <label>Дата и время доставки</label>
-                                    <div className="add-edit-order-delivery-time-group">
-                                        <button
-                                            className="add-edit-order-time-select-btn"
-                                            onClick={() => setIsDeliveryTimeModalOpen(true)}
-                                        >
-                                            <img src={calendarIcon} alt="Календарь" width={20} />
-                                            {deliveryDate && deliveryTime
-                                                ? `${new Date(deliveryDate).toLocaleDateString('ru-RU')} ${deliveryTime}`
-                                                : "Выбрать дату и время"}
-                                        </button>
+                                <div style={{ display: 'grid', gridTemplateColumns: formData.paymentMethod === 'Наличные' ? '1fr 1fr' : '1fr 1fr', gap: '1.5rem' }}>
+                                    {/* Блок даты и времени */}
+                                    <div className="add-edit-order-input-group">
+                                        <label>Дата и время доставки</label>
+                                        <div className="add-edit-order-delivery-time-group">
+                                            <button
+                                                className="add-edit-order-time-select-btn"
+                                                onClick={() => setIsDeliveryTimeModalOpen(true)}
+                                            >
+                                                <img src={calendarIcon} alt="Календарь" width={20} />
+                                                {deliveryDate && deliveryTime
+                                                    ? `${new Date(deliveryDate).toLocaleDateString('ru-RU')} ${deliveryTime}`
+                                                    : "Выбрать дату и время"}
+                                            </button>
+                                        </div>
+                                        {errors.datetime && (
+                                            <span className="add-edit-order-error-message">Выберите дату и время доставки</span>
+                                        )}
                                     </div>
-                                    {errors.datetime && (
-                                        <span className="add-edit-order-error-message">Выберите дату и время доставки</span>
-                                    )}
-                                </div>
 
 
-                                <div className="add-edit-order-input-group">
-                                    <label>Стоимость доставки</label>
-                                    <div className="add-edit-order-delivery-price">
-                                        <input
-                                            type="number"
-                                            placeholder="Стоимость доставки"
-                                            className="add-edit-order-input"
-                                            value={localDeliveryCost}
-                                            onChange={handleDeliveryCostChange}
-                                            onBlur={handleDeliveryCostBlur}
-                                        />
-                                        <button
-                                            onClick={() => { calculateFinalDeliveryCost() }}
-                                        >
-                                            Рассчитать автоматически
-                                        </button>
+                                    <div className="add-edit-order-input-group">
+                                        <label>{`Стоимость доставки ${isAutomaticModeCalculatingCostDelivery ? '(Авторасчет)' : '(Ручной ввод)'}`}</label>
+                                        <div className="add-edit-order-delivery-price"
+                                            title={!deliveryAddress ? 'Расчет недоступен, укажите адрес' : ''}>
+                                            <input
+                                                title={deliveryAddress ? isAutomaticModeCalculatingCostDelivery ? 'В данном режиме стоимость доставки рассчитывается автоматически, исходя из различных факторов' : 'В данном режиме стоимость доставки указывается вручную' : 'Расчет недоступен, укажите адрес'}
+                                                type="number"
+                                                className="add-edit-order-input"
+                                                value={localDeliveryCost}
+                                                onChange={handleDeliveryCostChange}
+                                                onBlur={handleDeliveryCostBlur}
+                                                disabled={!deliveryAddress || isAutomaticModeCalculatingCostDelivery}
+                                            />
+                                            <button
+
+                                                className="button-control"
+                                                onClick={() => {
+                                                    setIsAutomaticModeCalculatingCostDelivery(!isAutomaticModeCalculatingCostDelivery);
+                                                }}
+                                                style={{ opacity: !deliveryAddress ? '0.5' : '' }}
+                                                disabled={!deliveryAddress}
+                                            >
+                                                Режим
+                                                <img src={exchangeIcon} alt="Exchange" />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -808,7 +839,8 @@ const AddEditOrderPage = ({ mode }) => {
                         >
                             Итоговая информация</h2>
 
-                        {freeDeliveryMessage && (
+                        {/* Информирование о достижении суммы для бесплатной доставки возможно только в режиме автоматического расчета стоимости доставки */}
+                        {(freeDeliveryMessage && isAutomaticModeCalculatingCostDelivery) && (
                             <div
                                 className={`add-edit-order-delivery-message info`}
                             >
@@ -823,7 +855,11 @@ const AddEditOrderPage = ({ mode }) => {
 
                         <div className="add-edit-order-summary-row">
                             <span>Доставка:</span>
-                            <span>{formData.deliveryCost || 0} ₽</span>
+                            {deliveryAddress ? (
+                                <span>{formData.deliveryCost || 0} ₽</span>
+                            ) : (
+                                <span className="add-edit-order-delivery-error">Укажите адрес</span>
+                            )}
                         </div>
 
                         <div className="add-edit-order-summary-total">
@@ -843,6 +879,7 @@ const AddEditOrderPage = ({ mode }) => {
                 isOpen={showAddressOrderModal}
                 onCancel={() => setShowAddressOrderModal(false)}
                 onSave={(addressData) => handleAddressChange(addressData)}
+                initialAddress={deliveryAddress}
             />
 
             {/* Модальное окно выбра даты и интервала доставки в заказе */}

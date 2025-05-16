@@ -250,6 +250,7 @@
 
 /* Контейнер адреса доставки */
 .add-edit-order-address-card {
+    position: relative;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -373,7 +374,7 @@
 .add-edit-order-address-card-menu {
     position: absolute;
     right: 1rem;
-    top: 3rem;
+    top: 85%;
     background: white;
     border: 1px solid #dfe6e9;
     border-radius: 8px;
@@ -403,14 +404,29 @@
 /* Поле стоимости доставки */
 .add-edit-order-delivery-price {
     display: flex;
-    /* gap: 1rem; */
+    gap: 1rem;
     align-items: center;
-    /* padding-top: 1.5rem; */
-    /* border-top: 1px solid #e9ecef; */
 }
 
 .add-edit-order-delivery-price input {
     flex: 1;
+}
+
+/* Кнопка */
+.add-edit-order-delivery-price button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+}
+
+/* Иконка в кнопке */
+.add-edit-order-delivery-price button img {
+    width: 16px;
+    object-fit: cover;
+    filter: brightness(0) invert(1);
+    margin: 0;
 }
 
 /* Сообщение об ошибке */
@@ -428,6 +444,7 @@
 /* Кнопка выбора даты и времени доставки */
 .add-edit-order-time-select-btn {
     width: 100%;
+    height: 48.8px;
     padding: 1rem;
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -518,6 +535,11 @@
     text-align: center;
 }
 
+/* Адрес доставки не указан */
+.add-edit-order-delivery-error {
+    color: #e74c3c;
+    font-size: 0.9rem;
+}
 
 /* ================================== */
 /* Блок статусов заказа и оплаты */

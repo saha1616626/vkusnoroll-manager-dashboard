@@ -16,7 +16,13 @@ import './../../styles/modals/addressOrderModal.css'
 import crossIcon from './../../assets/icons/cross.png'; // Крестик
 import warningIcon from './../../assets/icons/warning.png';
 
-const AddressOrderModal = ({ mode, isOpen, onCancel, onSave }) => {
+const AddressOrderModal = ({
+    mode,
+    isOpen,
+    onCancel,
+    onSave,
+    initialAddress
+}) => {
 
     /* 
     ================================
@@ -107,13 +113,65 @@ const AddressOrderModal = ({ mode, isOpen, onCancel, onSave }) => {
             setSearchQuery(''); // Поиск
             setSuggestions([]); // Очищаем список адресов в подсказе поиска
         }
-    }, [onCancel]);
+    }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
     /* 
     ===========================
      Управление картой
     ===========================
     */
+
+    // Инициализации данных при запуске модального окна в режиме редактирования.
+    useEffect(() => {
+        if (isOpen && mode === 'Edit' && initialAddress) {
+
+            const coords = [initialAddress.latitude, initialAddress.longitude];
+
+            setFormData({
+                city: initialAddress.city,
+                street: initialAddress.street,
+                house: initialAddress.house,
+                isPrivateHome: initialAddress.isPrivateHome,
+                entrance: initialAddress.entrance || '',
+                floor: initialAddress.floor || '',
+                apartment: initialAddress.apartment || '',
+                comment: initialAddress.comment || ''
+            });
+
+            // Получаем адрес по координатам
+            reverseGeocode(coords).then(address => {
+                setSearchQuery(address);
+                setEditedAddress({
+                    displayName: address,
+                    coordinates: coords
+                });
+
+                // Удаляем предыдущую метку
+                if (mapRef.current) {
+                    mapRef.current.placemarks.removeAll();
+                }
+
+                // Создаем новую метку
+                const placemark = new ymaps.Placemark(
+                    coords,
+                    { balloonContent: address },
+                    { preset: 'islands#redIcon' }
+                );
+
+                // Добавляем метку на карту
+                mapRef.current.placemarks.add(placemark);
+
+                // Центрируем карту на координатах из БД
+                if (mapRef.current) {
+                    mapRef.current.setCenter(coords, 17, {
+                        duration: 1000,
+                        checkZoomRange: true,
+                        timingFunction: 'ease-in-out'
+                    });
+                }
+            });
+        }
+    }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Загрузка зон доставки
     const fetchDeliveryZones = async () => {
@@ -213,10 +271,22 @@ const AddressOrderModal = ({ mode, isOpen, onCancel, onSave }) => {
 
             // Создаем новую карту и сохраняем в ref
             const newMap = new ymaps.Map('address-order-modal-map', {
-                center: [56.129057, 40.406635],
-                zoom: 12.5,
+                center: mode === 'View' && initialAddress
+                    ? [initialAddress.latitude, initialAddress.longitude]
+                    : [56.129057, 40.406635],
+                zoom: mode === 'View' ? 17 : 12.5,
                 controls: ['zoomControl']
             });
+
+            // Для режима просмотра добавляем только метку
+            if (mode === 'View' && initialAddress) {
+                const placemark = new ymaps.Placemark(
+                    [initialAddress.latitude, initialAddress.longitude],
+                    { balloonContent: `${initialAddress.city}, ${initialAddress.street} ${initialAddress.house}` },
+                    { preset: 'islands#redIcon' }
+                );
+                newMap.geoObjects.add(placemark);
+            }
 
             // Отдельные коллекции для полигонов и меток
             const polygonsCollection = new ymaps.GeoObjectCollection();
@@ -229,7 +299,7 @@ const AddressOrderModal = ({ mode, isOpen, onCancel, onSave }) => {
             // Обработчик клика по карте
             const clickListener = async (e) => {
                 try {
-                    if (mode !== 'AddEdit') return;  // Можно поставить маркер только в определенном режиме
+                    if (mode !== 'Add' && mode !== 'Edit') return;  // Можно поставить маркер только в определенном режиме
 
                     const coordinates = e.get('coords');
                     const address = await reverseGeocode(coordinates);
@@ -533,7 +603,7 @@ const AddressOrderModal = ({ mode, isOpen, onCancel, onSave }) => {
             {/* Основной контент */}
             <div className={`address-order-modal-container ${isOpen ? 'active' : ''}`} ref={modalRef}>
                 {/* Режим добавления или изменения адреса */}
-                {mode === 'AddEdit' &&
+                {(mode === 'Add' || mode === 'Edit') &&
                     <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
                         {/* Поля */}
                         <div className="address-order-modal-sidebar">
@@ -676,11 +746,37 @@ const AddressOrderModal = ({ mode, isOpen, onCancel, onSave }) => {
 
                 {/* Режим просмотра адреса */}
                 {mode === 'View' &&
-                    <div className="">
+                    <div className="address-order-modal-view-container">
+                        {/* <div> */}
+                            <div className="address-order-modal-view-info">
+                                <h3 className="address-order-modal-view-title">Адрес доставки</h3>
+                                <div className="address-order-modal-view-content">
+                                    <p className="address-order-modal-view-main">
+                                        {initialAddress.city}, {initialAddress.street} {initialAddress.house}
+                                        {initialAddress.isPrivateHome && (
+                                            <span className="address-order-modal-view-private">Частный дом</span>
+                                        )}
+                                    </p>
+                                    {!initialAddress.isPrivateHome && (
+                                        <div className="address-order-modal-view-details">
+                                            {initialAddress.entrance && <div>Подъезд: {initialAddress.entrance}</div>}
+                                            {initialAddress.floor && <div>Этаж: {initialAddress.floor}</div>}
+                                            {initialAddress.apartment && <div>Квартира: {initialAddress.apartment}</div>}
+                                        </div>
+                                    )}
+                                    {initialAddress.comment && (
+                                        <div className="address-order-modal-view-comment">
+                                            <span className="icon">📝</span>
+                                            {initialAddress.comment}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        {/* </div> */}
 
+                        <div className="address-order-modal-view-map" id="address-order-modal-map" />
                     </div>
                 }
-
             </div>
 
             {/* Локальные уведомления */}

@@ -1,0 +1,73 @@
+/* Стили для модального окна подтверждения ухода со страницы при наличии несохраненных данных */
+
+/* Блокировка скролла */
+body.no-scroll {
+    overflow: hidden;
+}
+
+/* Пространство за модальным окном */
+.navigation-confirm-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+}
+
+/* Модальное окно */
+.navigation-confirm-modal-container {
+    background: white;
+    width: 400px;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+/* Заголовок */
+.navigation-confirm-modal-header {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+/* Текст заголовка */
+.navigation-confirm-modal-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.2em;
+}
+
+/* Тело сообщения */
+.navigation-confirm-modal-body p {
+    margin: 0 0 20px 0;
+    color: #34495e;
+    line-height: 1.5;
+}
+
+/* Контейнер кнопок */
+.navigation-confirm-modal-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* Кнопки */
+.navigation-confirm-modal-confirm-button,
+.navigation-confirm-modal-cancel-button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.3s;
+    color: black;
+    background-color: white;
+}
+
+.navigation-confirm-modal-confirm-button:hover,
+.navigation-confirm-modal-cancel-button:hover {
+    opacity: 0.8;
+    color: white;
+}

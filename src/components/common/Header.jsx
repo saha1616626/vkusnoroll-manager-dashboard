@@ -9,6 +9,7 @@ import { useOrderNotifications } from "../contexts/OrderNotificationContext"; //
 // Импорт компонентов
 import api from './../../utils/api'; // API сервера 
 import { useAuth } from "../contexts/AuthContext"; // Контекст авторизации
+import NavigationConfirmModal from "../modals/NavigationConfirmModal"; // Модальное окно подтверждения ухода со страницы при наличии несохраненных данных
 
 // Импорт стилей
 import "./../../styles/blocks/header.css";
@@ -44,6 +45,9 @@ const Header = () => {
     const notificationPanelRef = useRef(null); // Ссылка на панель уведомления
     const { allNotifications, togglePanel, isPanelOpen, clearAllNotifications, removeNotification } = useOrderNotifications(); // Состояния из контекста уведомления о новом заказе
     const { updateAuth } = useAuth(); // Состояния из контекста авторизации
+
+    const [showNavigationConfirmModal, setShowNavigationConfirmModal] = useState(false); // Отображение модального окна ухода со страницы
+    const [pendingNavigation, setPendingNavigation] = useState(null); // Подтверждение навигации
 
     /* 
     ===========================
@@ -194,8 +198,8 @@ const Header = () => {
 
         // Проверка на несохраненные изменения
         if (sessionStorage.getItem('isDirty') === 'true') { // На false isDirty при выходе без сохранения менять не нужно, так как компонент размонтируется и удалит состоние isDirty в localStorage
-            // setPendingNavigation(() => checkNavigation);
-            // setShowNavigationConfirmModal(true);
+            setPendingNavigation(() => checkNavigation);
+            setShowNavigationConfirmModal(true);
         } else {
             checkNavigation();
         }
@@ -323,9 +327,18 @@ const Header = () => {
                             </div>
                         )}
                     </div>
-
                 </div>
             </header>
+
+            {/* Модальное окно подтверждения ухода со страницы при наличии несохраненных данных */}
+            <NavigationConfirmModal
+                isOpen={showNavigationConfirmModal}
+                onConfirm={() => {
+                    pendingNavigation?.();
+                    setShowNavigationConfirmModal(false);
+                }}
+                onCancel={() => setShowNavigationConfirmModal(false)}
+            />
         </div>
     );
 }

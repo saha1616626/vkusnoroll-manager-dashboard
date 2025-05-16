@@ -55,8 +55,8 @@ body.no-scroll {
 
 /* Кнопки */
 
-.confirmation-modal-confirm-button,
-.confirmation-modal-cancel-button {
+.navigation-confirm-modal-confirm-button,
+.navigation-confirm-modal-cancel-button {
   padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
@@ -65,8 +65,8 @@ body.no-scroll {
   background-color: white;
 }
 
-.confirmation-modal-confirm-button:hover,
-.confirmation-modal-cancel-button:hover {
+.navigation-confirm-modal-confirm-button:hover,
+.navigation-confirm-modal-cancel-button:hover {
   opacity: 0.8;
   color: white;
 }

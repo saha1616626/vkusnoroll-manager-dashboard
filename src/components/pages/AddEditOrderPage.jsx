@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
 import { IMaskInput } from 'react-imask'; // Создание маски на номер телефона
+import isEqual from 'lodash/isEqual';  // Сравнивает два значения на глубокое равенство
 
 // Импорт компонентов
 import { useYmaps } from './../Hooks/useYmaps'; // Кастомный хук для использования API Яндекс Карт
@@ -13,6 +14,7 @@ import AddressOrderModal from '../modals/AddressOrderModal'; // Модально
 import DeliveryTimeOrderModal from '../modals/DeliveryTimeOrderModal'; // Модальное окно для управления датой и временем доставки
 import ValidationErrorMessageModal from '../modals/ValidationErrorMessageModal'; // Модальное окно отображения ошибок ввода при сохранении данных
 import ErrorMessageModal from '../modals/ErrorMessageModal'; // Модальное окно для отображения любых ошибок с кастомным заголовком
+import NavigationConfirmModal from "../modals/NavigationConfirmModal"; // Модальное окно подтверждения ухода со страницы при наличии несохраненных данных
 
 // Импорт иконок
 import deleteIcon from './../../assets/icons/delete.png'
@@ -37,13 +39,13 @@ const AddEditOrderPage = ({ mode }) => {
     const { ymaps } = useYmaps(); // API янедкс карт
     const addressMenuRef = useRef(null); // Ссылка на меню для редактирования и просмотра адреса
 
-    const [formData, setFormData] = useState({ // Данные формы
+    const formTemplate = { // Данные формы
         name: '',
         numberPhone: '',
         paymentMethod: '', // Тип оплаты
         changeAmount: '', // Подготовить сдачу с суммы
-        deliveryCost: '', // Стоимость доставки
-        orderStatusId: '',
+        deliveryCost: 0, // Стоимость доставки
+        orderStatusId: 'null',
         isPaymentStatus: '',
         address: { // Адрес
             city: '',
@@ -56,7 +58,11 @@ const AddEditOrderPage = ({ mode }) => {
             comment: ''
         },
         comment: ''
-    });
+    }
+
+    const [isDirty, setIsDirty] = useState(false); // Изменения на странице, требующие сохранения
+    const [formData, setFormData] = useState(formTemplate); // Основные данные формы
+    const [initialData, setInitialData] = useState(formTemplate); // Исходные данные при загрузке страницы
     const [orderItems, setOrderItems] = useState([]);  // Товары в заказе
 
     const [deliveryZones, setDeliveryZones] = useState([]); // Зоны доставки
@@ -94,6 +100,9 @@ const AddEditOrderPage = ({ mode }) => {
     const [errorMessages, setErrorMessages] = useState([]); // Ошибки
     const [showErrorMessageModal, setShowErrorMessageModal] = useState(false); // Отображение 
     const [titleErrorMessageModal, setTitleErrorMessageModal] = useState('Ошибка'); // Заголвок окна
+
+    const [showNavigationConfirmModal, setShowNavigationConfirmModal] = useState(false); // Отображение модального окна ухода со страницы
+    const [pendingNavigation, setPendingNavigation] = useState(null); // Подтверждение навигации
 
     const [refreshKey, setRefreshKey] = useState(0); // Для принудительного обновления данных на странице по таймеру
 
@@ -353,23 +362,89 @@ const AddEditOrderPage = ({ mode }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [showAddressMenu]);
 
+    // Проверка изменений в полях
+    useEffect(() => {
+        const dirty = !isEqual(formData, initialData);
+        setIsDirty(dirty);
+    }, [formData]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Сохраняем состояние о наличии несохраненных данных на странице
+    useEffect(() => {
+        sessionStorage.setItem('isDirty', isDirty.toString());
+    }, [isDirty]);
+
+    // Очистка состояния о наличии несохраненных данных при размонтировании
+    useEffect(() => {
+        return () => {
+            sessionStorage.removeItem('isDirty');
+        };
+    }, []);
+
+    // Обработка нажатия кнопки "Назад" в браузере
+    useEffect(() => {
+        const handleBackButton = (e) => {
+            if (isDirty) {
+                e.preventDefault();
+                setPendingNavigation(() => () => { //  Подтверждение перехода
+                    goBackOrRedirect(); // Возврат пользователя на страницу назад, если она есть в истории
+                    setIsDirty(false);
+                });
+                setShowNavigationConfirmModal(true); // Показываем модальное окно подтверждения
+            }
+            else {
+                //  Подтверждение перехода
+                goBackOrRedirect(); // Возврат пользователя на страницу назад, если она есть в истории
+            }
+        };
+
+        // Добавляем новую запись в историю вместо замены
+        window.history.pushState(null, null, window.location.pathname);
+        window.addEventListener("popstate", handleBackButton);
+
+        return () => {
+            window.removeEventListener("popstate", handleBackButton);
+        };
+    }, [navigate, isDirty]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Блокируем закрытие и обновление страницы, если есть несохраненные данные
+    useEffect(() => {
+        const handleBeforeUnload = (e) => { // Пользователь пытается покинуть страницу
+            if (isDirty) { // Есть несохраненные изменения
+                e.preventDefault(); // Предотвращает уход с текущей страницы
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload); // Обработчик handleBeforeUnload добавляется к объекту window всякий раз, когда пользователь пытается покинуть страницу
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload); // Функция очистки, которая удаляет обработчик события, когда компонент размонтируется или когда isDirty изменяется
+    }, [isDirty]); // Обработчик события будет добавляться каждый раз, когда isDirty изменяется
+
     /* 
     ===========================
      Обработчики событий
     ===========================
     */
 
+    // Возврат пользователя на страницу назад, если она есть в истории
+    const goBackOrRedirect = async () => {
+        if (window.history.length > 1) {
+            navigate(-1);
+        } else {
+            navigate('/orders', { replace: true });
+        }
+    }
+
     // Обработчик закрытия страницы
     const handleClosePage = () => { // Функция принимает аргумент forceClose, по умолчанию равный false. Аргумент позволяет при необходимости принудительно закрыть окно или перейти на другую страницу, минуя любые проверки
-        // if (isDirty) { // Если есть несохраненные изменения
-        //     // Показываем модальное окно вместо confirm
-        //     setPendingNavigation(() => () => {
-        //         navigate('/settings/employees', { replace: true });
-        //     });
-        //     setShowNavigationConfirmModal(true);
-        //     return;
-        // }
-        navigate('/orders', { replace: true }); // Возврат пользователя на предыдущую страницу с удалением маршрута
+        if (isDirty) { // Если есть несохраненные изменения
+            // Показываем модальное окно
+            setPendingNavigation(() => () => {
+                goBackOrRedirect(); // Возврат пользователя на страницу назад, если она есть в истории
+            });
+            setShowNavigationConfirmModal(true);
+            return;
+        }
+
+        goBackOrRedirect(); // Возврат пользователя на страницу назад, если она есть в истории
     };
 
     // Обработчик изменений в полях адреса
@@ -546,7 +621,7 @@ const AddEditOrderPage = ({ mode }) => {
             return;
         }
 
-        
+
 
     }
 
@@ -1010,6 +1085,15 @@ const AddEditOrderPage = ({ mode }) => {
                 onClose={() => setShowErrorMessageModal(false)}
             />
 
+            {/* Модальное окно подтверждения ухода со страницы при наличии несохраненных данных */}
+            <NavigationConfirmModal
+                isOpen={showNavigationConfirmModal}
+                onConfirm={() => {
+                    pendingNavigation?.();
+                    setShowNavigationConfirmModal(false);
+                }}
+                onCancel={() => setShowNavigationConfirmModal(false)}
+            />
 
         </div>
     );

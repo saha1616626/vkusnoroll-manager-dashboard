@@ -1,0 +1,90 @@
+/* Стили модального окна вывода ошибки при сохранении данных */
+
+/* Блокировка скролла */
+body.no-scroll {
+    overflow: hidden;
+}
+
+/* Пространство за модальным окном */
+.validation-error-message-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+}
+
+/* Модальное окно */
+.validation-error-message-modal-container {
+    background: white;
+    width: 400px;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+/* Заголовок */
+.validation-error-message-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+/* Текст заголовка */
+.validation-error-message-modal-header h3 {
+    margin: 0;
+    color: #e74c3c;
+}
+
+/* Кнопка закрыть сверху(крестик) */
+.validation-error-message-modal-close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.validation-error-message-modal-content {
+    margin: 15px 0;
+}
+
+.validation-error-message-modal-content ul {
+    margin: 10px 0 0 20px;
+    padding: 0;
+    color: #c0392b;
+}
+
+.validation-error-message-modal-content li {
+    margin: 5px 0;
+}
+
+.validation-error-message-modal-footer {
+    text-align: right;
+    display: flex;
+    justify-content: right;
+}
+
+
+/* Кнопка закрыть снизу */
+.validation-error-message-modal-confirm-button {
+    color: black;
+    background-color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+.validation-error-message-modal-confirm-button:hover {
+    opacity: 0.9;
+    opacity: 0.8;
+    color: white;
+}

@@ -126,12 +126,6 @@
     box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.1);
 }
 
-/* Подсветка поля при ошибке заполнения */
-.input-error {
-    border-color: #ff6b6b !important;
-    background: #fff5f5;
-}
-
 /* Заголовок поля */
 .add-edit-order-field-label {
     font-size: 0.9rem;
@@ -180,6 +174,50 @@
 
 .add-edit-order-payment-label:hover {
     background: #f8f8f8;
+}
+
+/* Стили для экспандера (В методе оплаты) */
+.add-edit-order-payment-expander {
+    background: none;
+    border: none;
+    padding: 0 4px;
+    margin-left: auto;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.add-edit-order-expander-icon {
+    transition: transform 0.3s ease;
+}
+
+.add-edit-order-expander-icon.expanded {
+    transform: rotate(180deg);
+}
+
+/* Контейнер для выпадающего блока экспандера */
+.add-edit-order-change-container {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.add-edit-order-change-container.expanded {
+    max-height: 200px;
+    /* Значение должно быть больше высоты контента */
+}
+
+/* Анимация появления */
+.add-edit-order-change-field {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+}
+
+.add-edit-order-change-container.expanded .add-edit-order-change-field {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 /* Контейнер поля для сдачи */

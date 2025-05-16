@@ -1,0 +1,94 @@
+/* Стили модального окна для вывода ошибок */
+
+/* Блокировка скролла */
+body.no-scroll {
+    overflow: hidden;
+}
+
+/* Пространство за модальным окном */
+.error-message-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+}
+
+/* Модальное окно */
+.error-message-modal-container {
+    background: white;
+    width: 450px;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Заголовок */
+.error-message-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+/* Текст заголовка */
+.error-message-modal-header h3 {
+    margin: 0;
+    color: #e74c3c;
+    font-size: 20px;
+}
+
+/* Иконка закрыть */
+.error-message-modal-close-icon {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0 8px;
+}
+
+.error-message-modal-close-icon:hover {
+    color: #333;
+}
+
+/* Контейнер ошибки */
+.error-message-modal-list {
+    margin: 0;
+    padding-left: 20px;
+    color: #34495e;
+}
+
+/* Текст ошибки */
+.error-message-modal-item {
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+/* Контейнер кнопок */
+.error-message-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+/* Кнопка закрыть */
+.error-message-modal-close-button {
+    color: black;
+    background-color: white;
+    padding: 8px 20px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.error-message-modal-close-button:hover {
+    opacity: 0.8;
+    color: white;
+}

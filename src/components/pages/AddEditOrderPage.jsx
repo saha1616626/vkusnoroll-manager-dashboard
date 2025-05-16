@@ -1,6 +1,6 @@
 // Страница для редактирования или добавления нового заказа
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
 import { IMaskInput } from 'react-imask'; // Создание маски на номер телефона
 
@@ -11,12 +11,13 @@ import OrderCompositionTable from '../ui/OrderCompositionTable'; // Таблиц
 import OrderAddItemsModal from '../modals/OrderAddItemsModal'; // Модальное окно для добавления товаров в заказ
 import AddressOrderModal from '../modals/AddressOrderModal'; // Модальное окно для управления адресом
 import DeliveryTimeOrderModal from '../modals/DeliveryTimeOrderModal'; // Модальное окно для управления датой и временем доставки
+import ValidationErrorMessageModal from '../modals/ValidationErrorMessageModal'; // Модальное окно отображения ошибок ввода при сохранении данных
+import ErrorMessageModal from '../modals/ErrorMessageModal'; // Модальное окно для отображения любых ошибок с кастомным заголовком
 
 // Импорт иконок
 import deleteIcon from './../../assets/icons/delete.png'
 import moreIcon from './../../assets/icons/moreVertical.png';
 import calendarIcon from './../../assets/icons/calendar.png'; // Календарь
-import autoIcon from './../../assets/icons/auto.png';
 import exchangeIcon from './../../assets/icons/exchange.png';
 
 // Импорт стилей
@@ -33,8 +34,7 @@ const AddEditOrderPage = ({ mode }) => {
     const { id } = useParams(); // Переданный id пользователя в URL запроса
     const pageId = 'add-edit-order-page'; // Уникальный идентификатор страницы
     const navigate = useNavigate();
-    const { ymaps, isReady } = useYmaps(); // API янедкс карт
-    const mapRef = useRef(null);  // Хранит экземпляр карты и DOM элемент после создания карты
+    const { ymaps } = useYmaps(); // API янедкс карт
     const addressMenuRef = useRef(null); // Ссылка на меню для редактирования и просмотра адреса
 
     const [formData, setFormData] = useState({ // Данные формы
@@ -58,16 +58,6 @@ const AddEditOrderPage = ({ mode }) => {
         comment: ''
     });
     const [orderItems, setOrderItems] = useState([]);  // Товары в заказе
-
-    const [errors, setErrors] = useState({ // Состояние для хранения ошибок заполнения
-        name: false,
-        numberPhone: false,
-        address: false,
-        datetime: false,
-        payment: false,
-        change: false
-    });
-    const [localNotifications, setLocalNotifications] = useState([]); // Уведомления
 
     const [deliveryZones, setDeliveryZones] = useState([]); // Зоны доставки
     const [deliveryAddress, setDeliveryAddress] = useState(null); // Адрес доставки
@@ -94,6 +84,16 @@ const AddEditOrderPage = ({ mode }) => {
     const [baseDeliveryCost, setBaseDeliveryCost] = useState(''); // Базовая стоимость доставки (из зоны)
     const [freeDeliveryMessage, setFreeDeliveryMessage] = useState(''); // Сообщение о бесплатной доставке или ее условиях
     const [showAddressMenu, setShowAddressMenu] = useState(false); // Меню для редактирования и просмотра адреса
+    const [isCashExpanded, setIsCashExpanded] = useState(false); // Экспандер меню для ввода суммы для подготовки сдачи
+
+    // Модальное окно ошибки ввода при сохранении данных
+    const [validationErrorMessage, setValidationErrorMessage] = useState([]); // Отображение 
+    const [showValidationErrorMessageModal, setShowValidationErrorMessageModal] = useState(false); // Отображение
+
+    // Модальное окно для отображения любых ошибок с кастомным заголовком
+    const [errorMessages, setErrorMessages] = useState([]); // Ошибки
+    const [showErrorMessageModal, setShowErrorMessageModal] = useState(false); // Отображение 
+    const [titleErrorMessageModal, setTitleErrorMessageModal] = useState('Ошибка'); // Заголвок окна
 
     const [refreshKey, setRefreshKey] = useState(0); // Для принудительного обновления данных на странице по таймеру
 
@@ -103,17 +103,7 @@ const AddEditOrderPage = ({ mode }) => {
     ==============================
     */
 
-    // Функция для добавления локальных уведомлений
-    const addLocalNotification = useCallback((message, type = 'info') => {
-        const id = Date.now();
-        setLocalNotifications(prev => [...prev, { id, message, type }]);
-
-        setTimeout(() => {
-            setLocalNotifications(prev => prev.filter(n => n.id !== id));
-        }, 3000);
-    }, []);
-
-    // Сумма заказа
+    // Сумма товаров заказа заказа
     const total = orderItems.reduce((sum, item) => sum + (item.pricePerUnit * item.quantityOrder || 0), 0);
 
     /* 
@@ -467,17 +457,98 @@ const AddEditOrderPage = ({ mode }) => {
 
     // Обработчик изменения стоимости доставки при вводе в поле
     const handleDeliveryCostChange = (e) => {
-        setLocalDeliveryCost(e.target.value);
+        let value = e.target.value
+            .replace(/\D/g, '') // Удаляем все нецифровые символы
+            .replace(/^0+/, '0') // Заменяем множественные нули в начале на один
+            .replace(/^0([1-9])/, '$1'); // Удаляем ведущий ноль если после него другие цифры
+
+        // Если поле пустое, разрешаем пустую строку
+        if (value === '0') value = '';
+
+        setLocalDeliveryCost(value);
     };
 
-    // Обработчик потери фокуса
+    // Обработчик потери фокуса со стоимости доставки
     const handleDeliveryCostBlur = () => {
-        const numericValue = Number(localDeliveryCost) || 0;
+        const numericValue = parseInt(localDeliveryCost, 10) || 0;
+        setFormData(prev => ({ ...prev, deliveryCost: numericValue }));
+
+        // Обновляем локальное значение для отображения форматированного числа
+        setLocalDeliveryCost(numericValue.toString());
+    };
+
+    // Обработчик для суммы сдачи
+    const handleChangeAmountChange = (e) => {
+        let value = e.target.value
+            .replace(/\D/g, '')
+            .replace(/^0+/, '0')
+            .replace(/^0([1-9])/, '$1');
+
+        if (value === '0') value = '';
+
         setFormData(prev => ({
             ...prev,
-            deliveryCost: numericValue
+            changeAmount: value
         }));
     };
+
+    const handleChangeAmountBlur = () => {
+        const numericValue = parseInt(formData.changeAmount, 10) || '';
+        setFormData(prev => ({
+            ...prev,
+            changeAmount: numericValue
+        }))
+    };
+
+    // Валидация полей
+    const validateForm = () => {
+        const errors = []; // Ошибки заполнения полей
+
+        if (!formData.name.trim()) errors.push('Имя');
+        if (formData.numberPhone.replace(/\D/g, '').length !== 11) errors.push('Номер телефона');
+        if (!deliveryAddress || !formData.address) errors.push('Адрес доставки');
+        if (!deliveryDate || !deliveryTime) errors.push('Дата и время доставки');
+        if (!formData.paymentMethod) errors.push('Способ оплаты');
+
+        return errors;
+    };
+
+    // Обработчик сохранения
+    const handleSave = async () => {
+
+        const errors = validateForm(); // Ошибки заполнения полей и форм
+
+        if (errors.length > 0) {
+            setValidationErrorMessage(errors);
+            setShowValidationErrorMessageModal(true);
+            return;
+        }
+
+        // Валидация наличия товаров
+        if (!orderItems || orderItems.length < 1) {
+            setErrorMessages(['Для сохранения необходимо выбрать минимум один товар']);
+            setShowErrorMessageModal(true);
+            return;
+        }
+
+        // Валидация товаров с нулевым количеством
+        const hasZeroQuantity = orderItems.some(item => item.quantityOrder === 0);
+        if (hasZeroQuantity) {
+            setErrorMessages(['Количество товара не может быть равно нулю']);
+            setShowErrorMessageModal(true);
+            return;
+        }
+
+        // Валидация поля подготовки суммы сдачи
+        if (formData.paymentMethod === 'Наличные' && formData.changeAmount && Number(formData.changeAmount) < total) {
+            setErrorMessages([`Сумма подготовленной сдачи должна быть не меньше ${(Number(total) + Number(formData.deliveryCost | 0))}₽`]);
+            setShowErrorMessageModal(true);
+            return;
+        }
+
+        
+
+    }
 
     /* 
     ===========================
@@ -495,7 +566,7 @@ const AddEditOrderPage = ({ mode }) => {
 
                 <div className="add-edit-order-header-controls">
                     <button className="button-control add-edit-order-close-btn" onClick={handleClosePage}>Закрыть</button>
-                    <button className="button-control add-edit-order-save-btn">Сохранить</button>
+                    <button className="button-control add-edit-order-save-btn" onClick={handleSave}>Сохранить</button>
                 </div>
             </div>
 
@@ -517,7 +588,7 @@ const AddEditOrderPage = ({ mode }) => {
                                             type="text"
                                             placeholder=""
                                             maxLength={50}
-                                            className={`add-edit-order-input add-edit-order-input-recipients-details ${errors.name ? 'input-error' : ''}`}
+                                            className={`add-edit-order-input add-edit-order-input-recipients-details`}
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                         />
@@ -529,18 +600,14 @@ const AddEditOrderPage = ({ mode }) => {
                                             mask="+7(000)000-00-00"
                                             value={formData.numberPhone}
                                             onAccept={(value) => setFormData({ ...formData, numberPhone: value })}
-                                            className={`add-edit-order-input add-edit-order-input-recipients-details ${errors.numberPhone ? 'input-error' : ''}`}
+                                            className={`add-edit-order-input add-edit-order-input-recipients-details`}
                                             placeholder="+7(___) ___-__-__"
                                         />
                                     </div>
                                 </div>
 
                                 <div className="add-edit-order-form-group">
-                                    <div className="add-edit-order-input-group"
-                                    // style={{ // Комментарий отображается, только если он есть и в режиме редактирования.
-                                    //     display: mode === 'add' || !formData.comment ? 'none' : ''
-                                    // }}
-                                    >
+                                    <div className="add-edit-order-input-group">
                                         <label>Комментарий клиента</label>
                                         <textarea className="add-edit-order-textarea"
                                             style={{ height: '100%' }}
@@ -645,7 +712,6 @@ const AddEditOrderPage = ({ mode }) => {
                                                 />
                                             </button>
 
-                                            {/* TODO - меню улетает */}
                                             {showAddressMenu && (
                                                 <div className="add-edit-order-address-card-menu" ref={addressMenuRef}
                                                     style={{
@@ -684,9 +750,6 @@ const AddEditOrderPage = ({ mode }) => {
                                             + Добавить адрес доставки
                                         </button>
                                     )}
-                                    {!deliveryAddress && errors.address && (
-                                        <span className="add-edit-order-error-message">Выберите адрес доставки</span>
-                                    )}
                                 </div>
 
                                 <div style={{ display: 'grid', gridTemplateColumns: formData.paymentMethod === 'Наличные' ? '1fr 1fr' : '1fr 1fr', gap: '1.5rem' }}>
@@ -704,9 +767,6 @@ const AddEditOrderPage = ({ mode }) => {
                                                     : "Выбрать дату и время"}
                                             </button>
                                         </div>
-                                        {errors.datetime && (
-                                            <span className="add-edit-order-error-message">Выберите дату и время доставки</span>
-                                        )}
                                     </div>
 
 
@@ -716,7 +776,9 @@ const AddEditOrderPage = ({ mode }) => {
                                             title={!deliveryAddress ? 'Расчет недоступен, укажите адрес' : ''}>
                                             <input
                                                 title={deliveryAddress ? isAutomaticModeCalculatingCostDelivery ? 'В данном режиме стоимость доставки рассчитывается автоматически, исходя из различных факторов' : 'В данном режиме стоимость доставки указывается вручную' : 'Расчет недоступен, укажите адрес'}
-                                                type="number"
+                                                type="text"
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
                                                 className="add-edit-order-input"
                                                 value={localDeliveryCost}
                                                 onChange={handleDeliveryCostChange}
@@ -754,30 +816,59 @@ const AddEditOrderPage = ({ mode }) => {
                                                     name="payment"
                                                     className="add-edit-order-radio"
                                                     checked={formData.paymentMethod === method}
-                                                    onChange={() => setFormData(prev => ({ ...prev, paymentMethod: method }))}
+                                                    onChange={() => {
+                                                        setFormData(prev => ({ ...prev, paymentMethod: method }));
+                                                        if (method !== 'Наличные') setIsCashExpanded(false);
+                                                        else setIsCashExpanded(true);
+                                                    }}
                                                 />
                                                 <span className="add-edit-order-payment-text">{method}</span>
+
+                                                {method === 'Наличные' && formData.paymentMethod === 'Наличные' && (
+                                                    <button
+                                                        type="button"
+                                                        className="add-edit-order-payment-expander"
+                                                        onClick={() => setIsCashExpanded(!isCashExpanded)}
+                                                    >
+                                                        <svg
+                                                            className={`add-edit-order-expander-icon ${isCashExpanded ? 'expanded' : ''}`}
+                                                            width="16"
+                                                            height="16"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path d="M6 9l6 6 6-6" />
+                                                        </svg>
+                                                    </button>
+                                                )}
+
                                             </div>
                                         </label>
 
                                         {method === 'Наличные' && formData.paymentMethod === 'Наличные' && (
-                                            <div className="add-edit-order-change-field">
-                                                <label className="add-edit-order-field-label">Подготовить сдачу с</label>
-                                                <div className="add-edit-order-currency-input">
-                                                    <input
-                                                        type="number"
-                                                        placeholder="5000"
-                                                        value={formData.changeAmount}
-                                                        onChange={e => setFormData(prev => ({ ...prev, changeAmount: e.target.value }))}
-                                                        min={total}
-                                                    />
-                                                    <span className="add-edit-order-currency">₽</span>
+                                            <div className={`add-edit-order-change-container ${isCashExpanded ? 'expanded' : ''}`}>
+                                                <div className="add-edit-order-change-field">
+                                                    <label className="add-edit-order-field-label">Подготовить сдачу с</label>
+                                                    <div className="add-edit-order-currency-input">
+                                                        <input
+                                                            type="text"
+                                                            inputMode="numeric"
+                                                            pattern="[0-9]*"
+                                                            placeholder="5000"
+                                                            value={formData.changeAmount}
+                                                            onChange={handleChangeAmountChange}
+                                                            onBlur={handleChangeAmountBlur}
+                                                            min={total}
+                                                        />
+                                                        <span className="add-edit-order-currency">₽</span>
+                                                    </div>
+                                                    {formData.changeAmount && formData.changeAmount < total && (
+                                                        <p className="add-edit-order-error-message">
+                                                            Сумма должна быть не меньше {(Number(total) + Number(formData.deliveryCost || 0))}₽ или оставьте поле пустым
+                                                        </p>
+                                                    )}
                                                 </div>
-                                                {formData.changeAmount && formData.changeAmount < total && (
-                                                    <p className="add-edit-order-error-message">
-                                                        Сумма должна быть не меньше {total}₽ или оставьте поле пустым
-                                                    </p>
-                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -903,6 +994,22 @@ const AddEditOrderPage = ({ mode }) => {
                 existingItems={orderItems}
                 onCancel={() => setShowAddModal(false)}
             />
+
+            {/* Модальное окно отображения ошибок ввода при сохранении данных */}
+            <ValidationErrorMessageModal
+                errors={validationErrorMessage}
+                isOpen={showValidationErrorMessageModal}
+                onClose={() => setShowValidationErrorMessageModal(false)}
+            />
+
+            {/* Модальное окно для отображения любых ошибок с кастомным заголовком */}
+            <ErrorMessageModal
+                isOpen={showErrorMessageModal}
+                title={titleErrorMessageModal || 'Ошибка'}
+                errors={errorMessages}
+                onClose={() => setShowErrorMessageModal(false)}
+            />
+
 
         </div>
     );

@@ -21,7 +21,9 @@ const DeliveryTimeOrderModal = ({
     refreshKey,
     // Выбранная дата и время доставки при редактировании заказа
     selectedDate: propSelectedDate,
-    selectedTime: propSelectedTime
+    selectedTime: propSelectedTime,
+    initialDate: propInitialDate,
+    initialTime: propInitialTime
 }) => {
 
     /* 
@@ -61,11 +63,15 @@ const DeliveryTimeOrderModal = ({
     // Эффект сброса времени при смене даты
     useEffect(() => {
         // Сбрасываем время только если дата изменилась НЕ при первом открытии
-        if (prevSelectedDateRef.current !== selectedDate && prevSelectedDateRef.current !== '') {
+        if (
+            prevSelectedDateRef.current !== selectedDate &&
+            prevSelectedDateRef.current !== '' &&
+            selectedDate !== propSelectedDate // Исходная дата из пропсов
+        ) {
             setSelectedTime('');
         }
         prevSelectedDateRef.current = selectedDate;
-    }, [selectedDate]);
+    }, [selectedDate, propSelectedDate]);
 
     // Закрываем модальное окно при клике на фон
     useEffect(() => {
@@ -89,29 +95,29 @@ const DeliveryTimeOrderModal = ({
     ===========================
     */
 
-    // Добавляем выбранную дату в расписание если её нет
+    // Добавляем выбранную дату в расписание если её нет (Это необходимо для добавления неактуальных дней)
     const enhancedSchedule = useMemo(() => {
-        if (!propSelectedDate) return deliverySchedule;
+        if (!propInitialDate) return deliverySchedule;
 
-        const exists = deliverySchedule.some(d => d.date === propSelectedDate);
+        const exists = deliverySchedule.some(d => d.date === propInitialDate);
         if (!exists) {
             return [{
-                date: propSelectedDate,
+                date: propInitialDate,
                 isWorking: false,
                 start: '00:00',
                 end: '00:00'
             }, ...deliverySchedule];
         }
         return deliverySchedule;
-    }, [deliverySchedule, propSelectedDate]);
+    }, [deliverySchedule, propInitialDate]);
 
     // Генерация слотов с добавлением выбранного времени если его нет
     const generateEnhancedSlots = (selectedDay, slots) => {
-        if (!propSelectedTime || selectedDay.date !== propSelectedDate) return slots;
+        if (!propInitialTime || selectedDay.date !== propInitialDate) return slots;
 
-        const exists = slots.some(s => s === propSelectedTime);
+        const exists = slots.some(s => s === propInitialTime);
         if (!exists) {
-            return [propSelectedTime, ...slots];
+            return [propInitialTime, ...slots];
         }
         return slots;
     };
@@ -191,7 +197,7 @@ const DeliveryTimeOrderModal = ({
                         {enhancedSchedule.map(day => {
                             const isExpired = isDateExpired(day.date);
                             const isClosed = !day.isWorking && !isExpired;
-                            const isBookedClosed = isClosed && day.date === propSelectedDate; // Если день нерабочий, но на эту дату назначен заказ
+                            const isBookedClosed = isClosed && day.date === propInitialDate; // Если день нерабочий, но на эту дату назначен заказ
 
                             return (
                                 <button
@@ -203,11 +209,11 @@ const DeliveryTimeOrderModal = ({
                                          ${selectedDate === day.date ? 'selected' : ''}`}
                                     onClick={() => {
                                         // Разрешаем выбор только если день рабочий ИЛИ это сохраненная дата
-                                        if (day.isWorking || day.date === propSelectedDate) {
+                                        if (day.isWorking || day.date === propInitialDate) {
                                             setSelectedDate(day.date);
                                         }
                                     }}
-                                    disabled={!day.isWorking && day.date !== propSelectedDate}
+                                    disabled={!day.isWorking && day.date !== propInitialDate}
                                 >
                                     <div>{new Date(day.date).toLocaleDateString('ru-RU', { weekday: 'short' })}</div>
                                     <div>{new Date(day.date).toLocaleDateString('ru-RU', { day: 'numeric' })}</div>

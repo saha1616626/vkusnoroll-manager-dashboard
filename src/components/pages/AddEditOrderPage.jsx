@@ -70,6 +70,9 @@ const AddEditOrderPage = ({ mode }) => {
     const [formData, setFormData] = useState(formTemplate); // Основные данные формы
     const [initialData, setInitialData] = useState(formTemplate); // Исходные данные при загрузке страницы
 
+    const [initialDeliveryDate, setInitialDeliveryDate] = useState('');
+    const [initialDeliveryTime, setInitialDeliveryTime] = useState('');
+
     const [deliveryZones, setDeliveryZones] = useState([]); // Зоны доставки
     const [deliveryAddress, setDeliveryAddress] = useState(null); // Адрес доставки
     const [isAddressValid, setIsAddressValid] = useState(true); // Статус валидации адреса доставки
@@ -337,6 +340,10 @@ const AddEditOrderPage = ({ mode }) => {
                         setIsCashExpanded(true);
                     }
 
+                    // Сохраняем исходные дату и время
+                    setInitialDeliveryDate(deliveryDate);
+                    setInitialDeliveryTime(deliveryTime);
+
                     // Установка адреса доставки
                     setDeliveryAddress({
                         ...transformedAddress,
@@ -373,14 +380,20 @@ const AddEditOrderPage = ({ mode }) => {
                 const response = await api.getNextSevenDaysSchedule();
                 setDeliverySchedule(response.data);
 
-                // Автовыбор первой доступной даты
-                // const firstWorkingDay = response.data.find(d => d.isWorking);
-                // if (firstWorkingDay) {
-                //     setFormData(prev => ({
-                //         ...prev,
-                //         deliveryDate: firstWorkingDay.date
-                //     }));
-                // }
+                // Автовыбор первой доступной даты в режиме добавления
+                if (mode === 'add') {
+                    const firstWorkingDay = response.data.find(d => d.isWorking);
+                    if (firstWorkingDay) {
+                        setFormData(prev => ({
+                            ...prev,
+                            deliveryDate: firstWorkingDay.date
+                        }));
+                        setInitialData(prev => ({
+                            ...prev,
+                            deliveryDate: firstWorkingDay.date
+                        }));
+                    }
+                }
             } catch (error) {
                 console.error('Ошибка загрузки расписания:', error);
                 if (window.history.length > 1) { // В случае ошибки происходит маршрутизация на предыдущую страницу или в меню
@@ -1266,8 +1279,11 @@ const AddEditOrderPage = ({ mode }) => {
                     }));
                 }}
                 refreshKey={refreshKey}
-                selectedDate={initialData.deliveryDate}
-                selectedTime={initialData.deliveryTime}
+                selectedDate={formData.deliveryDate}
+                selectedTime={formData.deliveryTime}
+                // Добавляем начальные даты в общий список, если их нет (необходимо для добавления неактуальных дней)
+                initialDate={initialDeliveryDate}
+                initialTime={initialDeliveryTime}
             />
 
             {/* Модальное окно для добавления товаров в заказ */}

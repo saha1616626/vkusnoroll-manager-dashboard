@@ -242,7 +242,7 @@ const DeliveryTimeOrderModal = ({
                             const slots = selectedDay.isWorking ? generateFilteredSlots(selectedDay) : [];
                             const enhancedSlots = generateEnhancedSlots(selectedDay, slots);
 
-                            return enhancedSlots.length > 0 && (
+                            return enhancedSlots.length > 0 ? (
                                 enhancedSlots.map((time, index) => (
                                     <button
                                         key={index}
@@ -254,6 +254,10 @@ const DeliveryTimeOrderModal = ({
                                         {time} {!slots.includes(time) && '(Неактуально)'}
                                     </button>
                                 ))
+                            ) : (
+                                <div className="delivery-time-order-modal-no-slots">
+                                    Доставка на выбранную дату недоступна
+                                </div>
                             );
                         })()}
                     </div>

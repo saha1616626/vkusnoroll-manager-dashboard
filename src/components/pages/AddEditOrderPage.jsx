@@ -70,7 +70,7 @@ const AddEditOrderPage = ({ mode }) => {
     const [formData, setFormData] = useState(formTemplate); // Основные данные формы
     const [initialData, setInitialData] = useState(formTemplate); // Исходные данные при загрузке страницы
 
-    const [initialDeliveryDate, setInitialDeliveryDate] = useState('');
+    const [initialDeliveryDate, setInitialDeliveryDate] = useState(''); // Исходные данные для даты и времени доставки
     const [initialDeliveryTime, setInitialDeliveryTime] = useState('');
 
     const [deliveryZones, setDeliveryZones] = useState([]); // Зоны доставки
@@ -351,11 +351,6 @@ const AddEditOrderPage = ({ mode }) => {
                         longitude: addressData.longitude
                     });
 
-                    // TODO
-                    // Адрес с ошибкой открывается
-                    // Дата и время доставки при открытие не отображается как выбраная (устаревшая тоже отображается)
-                    // Стоимость доставки должна отображаться в ручном режиме, чтобы автоматически не изменилась
-
                 } catch (error) {
                     console.error('Ошибка загрузки заказа:', error);
                     setErrorMessages(['Не удалось загрузить данные заказа']);
@@ -405,7 +400,62 @@ const AddEditOrderPage = ({ mode }) => {
         };
 
         loadDeliverySchedule();
-    }, []);
+    }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Обновляем важные данные каждые 5 минут по таймеру
+    useEffect(() => {
+        const loadDeliverySchedule = setInterval(async () => {
+            try {
+                const responseDeliverySchedule = await api.getNextSevenDaysSchedule();
+                setDeliverySchedule(responseDeliverySchedule.data);
+
+                // Автовыбор первой доступной даты в режиме добавления
+                if (mode === 'add') {
+                    const firstWorkingDay = responseDeliverySchedule.data.find(d => d.isWorking);
+                    if (firstWorkingDay) {
+                        setFormData(prev => ({
+                            ...prev,
+                            deliveryTime: ''
+                        }));
+                    }
+                }
+
+                // Если режим редактирования и была выбрана новая дата и время доставки, то происходит сброс времени, так как необходимо актуализировать данные
+                if (mode === 'edit' && ((formData.deliveryTime !== initialData.deliveryTime) || (formData.deliveryDate !== initialData.deliveryDate))) {
+                    setFormData(prev => ({
+                        ...prev,
+                        deliveryTime: ''
+                    }));
+                }
+
+                const responseOrderSettings = await api.getOrderSettings();
+                const {
+                    defaultPrice,
+                    isFreeDelivery,
+                    freeThreshold,
+                    interval,
+                    serverTime // Время в формате ISO
+                } = responseOrderSettings.data;
+
+                setOrderSettings({ // Получаем детали стоимости доставки
+                    defaultPrice: defaultPrice || 0,
+                    isFreeDelivery: Boolean(isFreeDelivery),
+                    freeThreshold: Math.max(Number(freeThreshold) || 0, 0)
+                });
+                setDeliveryInterval(interval); // Интервал доставки
+                setCurrentServerTime(new Date(serverTime)); // Устанавливаем текущее время по Москве из БД
+            } catch (error) {
+                console.error('Ошибка загрузки расписания:', error);
+                if (window.history.length > 1) { // В случае ошибки происходит маршрутизация на предыдущую страницу или в меню
+                    window.history.back();
+                } else {
+                    window.location.href = '/menu';
+                }
+            }
+        }, 5 * 60 * 1000); // Обновление данных по окончании заданного времени
+
+        return () => clearInterval(loadDeliverySchedule);
+    }, [formData.deliveryDate, initialData.deliveryDate, formData.deliveryTime, initialData.deliveryTime]);  // eslint-disable-line react-hooks/exhaustive-deps
 
     // Получаем все необходимые данные для формирования заказа
     useEffect(() => {

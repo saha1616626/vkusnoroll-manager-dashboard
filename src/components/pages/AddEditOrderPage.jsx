@@ -99,7 +99,7 @@ const AddEditOrderPage = ({ mode }) => {
     const [isCashExpanded, setIsCashExpanded] = useState(false); // Экспандер меню для ввода суммы для подготовки сдачи
 
     // Модальное окно ошибки ввода при сохранении данных
-    const [validationErrorMessage, setValidationErrorMessage] = useState([]); // Отображение 
+    const [validationErrorMessage, setValidationErrorMessage] = useState([]); // Ошибки 
     const [showValidationErrorMessageModal, setShowValidationErrorMessageModal] = useState(false); // Отображение
 
     // Модальное окно для отображения любых ошибок с кастомным заголовком

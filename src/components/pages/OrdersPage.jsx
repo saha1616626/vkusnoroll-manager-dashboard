@@ -15,6 +15,9 @@ import SearchInput from './../ui/SearchInput'; // Поле поиска
 import api from '../../utils/api'; // API сервера
 import PaginationBar from '../ui/PaginationBar'; // Панель разбиения контента на страницы
 import DropdownStatusSelection from '../ui/DropdownStatusSelection';  // Выбор отображаемых кнопок со статусами заказов
+import ChangeOrderStatusesModal from '../modals/ChangeOrderStatusesModal'; // Модальное окно для смены статусов у заказов (массово)
+import ChangeOrderPaymentStatusesModal from '../modals/ChangeOrderPaymentStatusesModal'; // Модальное окно для смены статусов оплаты у заказов (массово)
+import ConfirmationModal from '../modals/ConfirmationModal'; // Модальное окно для подтверждения удаления данных
 
 // Импорт иконок
 import addIcon from './../../assets/icons/add.png'
@@ -63,6 +66,15 @@ const OrdersPage = () => {
 
     // Статусы
     const [activeStatuses, setActiveStatuses] = useState([]); // Выбранные статусы заказов
+
+    // Модальное окно для смены статусов у заказов (массово)
+    const [showChangeOrderStatusesModal, setShowChangeOrderStatusesModal] = useState(false); // Отображение модального окна
+
+    // Модальное окно для смены статусов оплаты у заказов (массово)
+    const [showChangeOrderPaymentStatusesModal, setShowChangeOrderPaymentStatusesModal] = useState(false); // Отображение модального окна
+
+    // Модальное окно для подтверждения удаления данных
+    const [showDeleteOrdersModal, setShowDeleteOrdersModal] = useState(false); // Отображение модального окна
 
     /* 
     ===========================
@@ -608,9 +620,24 @@ const OrdersPage = () => {
 
                     {/*  Функции: удалить заказ, изменить статус оплаты и изменить статус заказа */}
                     <DropdownButtonChange
-                    // onDelete={() => handleDelete()}
-                    // onPaymentStatus={() => setShowPaymentModal(true)}
-                    // onOrderStatus={() => setShowOrderStatusModal(true)}
+                        onDelete={() => {
+                            if (selectedOrdersIds.length === 0) {
+                                return;
+                            }
+                            setShowDeleteOrdersModal(true);
+                        }}
+                        onPaymentStatus={() => {
+                            if (selectedOrdersIds.length === 0) {
+                                return;
+                            }
+                            setShowChangeOrderPaymentStatusesModal(true);
+                        }}
+                        onOrderStatus={() => {
+                            if (selectedOrdersIds.length === 0) {
+                                return;
+                            }
+                            setShowChangeOrderStatusesModal(true);
+                        }}
                     />
 
                     {/* Поиск */}
@@ -687,6 +714,61 @@ const OrdersPage = () => {
                     />
                 )}
             </div>
+
+            {/* Модальное окно для смены статусов у заказов (массово) */}
+            <ChangeOrderStatusesModal
+                isOpen={showChangeOrderStatusesModal}
+                selectedOrderIds={selectedOrdersIds}
+                onConfirm={async (newStatusId) => {
+                    try {
+                        await api.changeOrderStatuses(selectedOrdersIds, newStatusId);
+                        await fetchData();
+                        setSelectedOrdersIds([]);
+                    } catch (error) {
+                        console.error("Ошибка изменения статусов:", error);
+                    }
+                    setShowChangeOrderStatusesModal(false);
+                }}
+                onCancel={() => setShowChangeOrderStatusesModal(false)}
+            />
+
+            {/* Модальное окно для смены статусов оплаты у заказов (массово) */}
+            <ChangeOrderPaymentStatusesModal
+                isOpen={showChangeOrderPaymentStatusesModal}
+                selectedOrderIds={selectedOrdersIds}
+                onConfirm={async (newStatusPayment) => {
+                    try {
+                        await api.changeOrderPaymentStatuses(selectedOrdersIds, newStatusPayment);
+                        await fetchData();
+                        setSelectedOrdersIds([]);
+                    } catch (error) {
+                        console.error("Ошибка изменения статусов оплаты:", error);
+                    }
+                    setShowChangeOrderPaymentStatusesModal(false);
+                }}
+                onCancel={() => setShowChangeOrderPaymentStatusesModal(false)}
+            />
+
+            {/* Модальное окно для подтверждения удаления данных */}
+            <ConfirmationModal
+                isOpen={showDeleteOrdersModal}
+                title={selectedOrdersIds.length === 1
+                    ? "Вы уверены, что хотите удалить заказ?"
+                    : "Вы уверены, что хотите удалить список заказов?"
+                }
+                message={'Подтвердите действие'}
+                onConfirm={async () => {
+                    try {
+                        await api.deleteOrders(selectedOrdersIds);
+                        await fetchData();
+                        setSelectedOrdersIds([]);
+                    } catch (error) {
+                        console.error("Ошибка удаления заказов:", error);
+                    }
+                    setShowDeleteOrdersModal(false);
+                }}
+                onCancel={() => setShowDeleteOrdersModal(false)}
+            />
 
         </div>
     );

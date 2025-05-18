@@ -67,7 +67,10 @@ const apiMethods = {
     createOrder: (data) => api.post('/orders/manager', data), // Создать заказ
     updateOrder: (id, data) => api.put(`/orders/manager/${id}`, data), // Обновить заказ
     getOrderById: (id) => api.get(`/orders/manager/${id}`), // Получить заказ по id
-
+    changeOrderStatuses: (orderIds, newStatusId) => api.put('/orders/manager/change-status', { orderIds, newStatusId }), // Изменить статус заказов
+    changeOrderPaymentStatuses: (orderIds, isPaymentStatus) => api.put('/orders/manager/change-payment-statuses', { orderIds, isPaymentStatus }), // Изменить статус оплаты заказов
+    deleteOrders: (orderIds) => api.delete('/orders/manager', { data: { orderIds } }), // Удаление заказов
+    
 };
 
 // Экспортируем объект по умолчанию

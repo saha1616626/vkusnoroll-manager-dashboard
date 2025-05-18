@@ -2,7 +2,7 @@
 .dropdown-button-change {
     position: relative;
     display: inline-block;
-    z-index: 1000;
+    z-index: 10;
 }
 
 /* Основная кнопка */

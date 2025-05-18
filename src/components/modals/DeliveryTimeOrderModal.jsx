@@ -1,6 +1,6 @@
 // Модальное окно для управления датой и временем доставки в заказе
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 
 // Импорт компонентов
@@ -18,7 +18,10 @@ const DeliveryTimeOrderModal = ({
     currentServerTime,
     deliveryInterval,
     onSelect,
-    refreshKey
+    refreshKey,
+    // Выбранная дата и время доставки при редактировании заказа
+    selectedDate: propSelectedDate,
+    selectedTime: propSelectedTime
 }) => {
 
     /* 
@@ -28,8 +31,11 @@ const DeliveryTimeOrderModal = ({
     */
 
     const modalRef = useRef(null); // Ссылка на текущее модальное окно
-    const [selectedDate, setSelectedDate] = useState(''); // Дата доставки
-    const [selectedTime, setSelectedTime] = useState(''); // Время доставки
+    const [selectedDate, setSelectedDate] = useState(propSelectedDate || ''); // Дата доставки
+    const [selectedTime, setSelectedTime] = useState(propSelectedTime || ''); // Время доставки
+
+    // Реф для отслеживания предыдущей даты
+    const prevSelectedDateRef = useRef(selectedDate);
 
     /* 
     ===========================
@@ -39,8 +45,10 @@ const DeliveryTimeOrderModal = ({
 
     // При открытии окна передается перечень рабочих дней с указанием времени доставки
     useEffect(() => {
-        if (isOpen && deliverySchedule.length > 0) {
-            setSelectedDate(deliverySchedule.find(d => d.isWorking)?.date || '');
+        if (isOpen) {
+            // Устанавливаем значения строго из пропсов при открытии
+            setSelectedDate(propSelectedDate || '');
+            setSelectedTime(propSelectedTime || '');
         }
 
         // Убираем скролл с перекрытой страницы
@@ -48,11 +56,15 @@ const DeliveryTimeOrderModal = ({
             document.body.classList.add('no-scroll');
             return () => document.body.classList.remove('no-scroll');
         }
-    }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps 
+    }, [isOpen, propSelectedDate, propSelectedTime]); // eslint-disable-line react-hooks/exhaustive-deps 
 
     // Эффект сброса времени при смене даты
     useEffect(() => {
-        setSelectedTime('');
+        // Сбрасываем время только если дата изменилась НЕ при первом открытии
+        if (prevSelectedDateRef.current !== selectedDate && prevSelectedDateRef.current !== '') {
+            setSelectedTime('');
+        }
+        prevSelectedDateRef.current = selectedDate;
     }, [selectedDate]);
 
     // Закрываем модальное окно при клике на фон
@@ -76,6 +88,33 @@ const DeliveryTimeOrderModal = ({
      Обработчики событий
     ===========================
     */
+
+    // Добавляем выбранную дату в расписание если её нет
+    const enhancedSchedule = useMemo(() => {
+        if (!propSelectedDate) return deliverySchedule;
+
+        const exists = deliverySchedule.some(d => d.date === propSelectedDate);
+        if (!exists) {
+            return [{
+                date: propSelectedDate,
+                isWorking: false,
+                start: '00:00',
+                end: '00:00'
+            }, ...deliverySchedule];
+        }
+        return deliverySchedule;
+    }, [deliverySchedule, propSelectedDate]);
+
+    // Генерация слотов с добавлением выбранного времени если его нет
+    const generateEnhancedSlots = (selectedDay, slots) => {
+        if (!propSelectedTime || selectedDay.date !== propSelectedDate) return slots;
+
+        const exists = slots.some(s => s === propSelectedTime);
+        if (!exists) {
+            return [propSelectedTime, ...slots];
+        }
+        return slots;
+    };
 
     // Генерация всех временных интервалов доставки
     const generateTimeSlots = (start, end, interval) => {
@@ -125,6 +164,13 @@ const DeliveryTimeOrderModal = ({
         }
     };
 
+    // Проверка на актуальность даты
+    const isDateExpired = (dateString) => {
+        const date = new Date(dateString);
+        const today = new Date(currentServerTime);
+        return date < new Date(today.setHours(0, 0, 0, 0));
+    };
+
     /* 
     ===========================
      Рендер
@@ -142,54 +188,68 @@ const DeliveryTimeOrderModal = ({
 
                 <div className="delivery-time-order-modal-content">
                     <div className="delivery-time-order-modal-calendar">
-                        {deliverySchedule.map(day => (
-                            <button
-                                key={day.date}
-                                className={`delivery-time-order-modal-day ${!day.isWorking ? 'disabled' : ''} ${selectedDate === day.date ? 'selected' : ''}`}
-                                onClick={() => day.isWorking && setSelectedDate(day.date)}
-                                disabled={!day.isWorking}
-                            >
-                                <div>{new Date(day.date).toLocaleDateString('ru-RU', { weekday: 'short' })}</div>
-                                <div>{new Date(day.date).toLocaleDateString('ru-RU', { day: 'numeric' })}</div>
-                                <div
-                                    style={{
-                                        marginTop: '5px',
-                                        paddingTop: '2px',
-                                        borderBottomWidth: '100px',
-                                        borderTop: '1px solid black',
-                                        borderWidth: '0.5px',
-                                        display: 'inline-block',
-                                        padding: '0 0'
+                        {enhancedSchedule.map(day => {
+                            const isExpired = isDateExpired(day.date);
+                            const isClosed = !day.isWorking && !isExpired;
+                            const isBookedClosed = isClosed && day.date === propSelectedDate; // Если день нерабочий, но на эту дату назначен заказ
+
+                            return (
+                                <button
+                                    key={day.date}
+                                    className={`delivery-time-order-modal-day 
+                                         ${isBookedClosed ? 'expired' : ''}
+                                         ${isClosed && !isBookedClosed ? 'closed' : ''}
+                                         ${isExpired ? 'expired' : ''}
+                                         ${selectedDate === day.date ? 'selected' : ''}`}
+                                    onClick={() => {
+                                        // Разрешаем выбор только если день рабочий ИЛИ это сохраненная дата
+                                        if (day.isWorking || day.date === propSelectedDate) {
+                                            setSelectedDate(day.date);
+                                        }
                                     }}
+                                    disabled={!day.isWorking && day.date !== propSelectedDate}
                                 >
-                                    {day.isWorking ? `${day.start}-${day.end}` : 'Закрыто'}</div>
-                            </button>
-                        ))}
+                                    <div>{new Date(day.date).toLocaleDateString('ru-RU', { weekday: 'short' })}</div>
+                                    <div>{new Date(day.date).toLocaleDateString('ru-RU', { day: 'numeric' })}</div>
+                                    <div
+                                        style={{
+                                            marginTop: '5px',
+                                            paddingTop: '2px',
+                                            borderBottomWidth: '100px',
+                                            borderTop: '1px solid black',
+                                            borderWidth: '0.5px',
+                                            display: 'inline-block',
+                                            padding: '0 0'
+                                        }}
+                                    >
+                                        {day.isWorking ? `${day.start}-${day.end}` :
+                                            isExpired ? 'Неактуально' : 'Закрыто'}
+                                    </div>
+                                </button>
+                            )
+                        })}
                     </div>
 
                     <div className="delivery-time-order-modal-time-slots">
-                        {selectedDate && deliverySchedule
-                            .find(d => d.date === selectedDate)
-                            ?.isWorking && (() => {
-                                const selectedDay = deliverySchedule.find(d => d.date === selectedDate);
-                                const slots = generateFilteredSlots(selectedDay);
+                        {selectedDate && (() => {
+                            const selectedDay = enhancedSchedule.find(d => d.date === selectedDate);
+                            const slots = selectedDay.isWorking ? generateFilteredSlots(selectedDay) : [];
+                            const enhancedSlots = generateEnhancedSlots(selectedDay, slots);
 
-                                return slots.length > 0 ? (
-                                    slots.map((time, index) => (
-                                        <button
-                                            key={index}
-                                            className={`delivery-time-order-modal-slot ${selectedTime === time ? 'selected' : ''}`}
-                                            onClick={() => setSelectedTime(time)}
-                                        >
-                                            {time}
-                                        </button>
-                                    ))
-                                ) : (
-                                    <div className="delivery-time-order-modal-no-slots">
-                                        Доставка на выбранную дату недоступна
-                                    </div>
-                                );
-                            })()}
+                            return enhancedSlots.length > 0 && (
+                                enhancedSlots.map((time, index) => (
+                                    <button
+                                        key={index}
+                                        className={`delivery-time-order-modal-slot 
+                        ${selectedTime === time ? 'selected' : ''}
+                        ${!slots.includes(time) ? 'expired' : ''}`}
+                                        onClick={() => setSelectedTime(time)}
+                                    >
+                                        {time} {!slots.includes(time) && '(Неактуально)'}
+                                    </button>
+                                ))
+                            );
+                        })()}
                     </div>
                 </div>
 

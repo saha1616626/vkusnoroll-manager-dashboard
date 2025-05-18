@@ -96,6 +96,37 @@ body.no-scroll {
     cursor: pointer;
     transition: all 0.2s;
     text-align: center;
+    position: relative;
+}
+
+/* Стили для устаревших дней */
+.delivery-time-order-modal-day.expired {
+    background-color: #fff3e0;
+    border-color: #ffb74d;
+    cursor: pointer;
+}
+
+.delivery-time-order-modal-day.expired.selected {
+    background-color: #ffe0b2;
+}
+
+/* Индикатор устаревшей даты */
+.delivery-time-order-modal-day.expired::after {
+    content: '⚠️';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+/* Стили для ЗАКРЫТЫХ дней (нерабочий день, но дата в будущем) */
+.delivery-time-order-modal-day.closed {
+    background-color: #f8f9fa;
+    border-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+.delivery-time-order-modal-day.closed.selected {
+    background-color: #e9ecef;
 }
 
 /* Кнопка нажата */
@@ -107,7 +138,7 @@ body.no-scroll {
 }
 
 /* Кнопка не нажата */
-.delivery-time-order-modal-day.disabled {
+.delivery-time-order-modal-day.closed {
     background: #f8f9fa;
     color: #adb5bd;
     cursor: not-allowed;
@@ -139,6 +170,16 @@ body.no-scroll {
     background: #f0fff4;
     transition: ease-in-out 0.1s;
     font-weight: 500;
+}
+
+/* Стили для устаревших временных слотов */
+.delivery-time-order-modal-slot.expired {
+    background-color: #ffebee;
+    color: #ef5350;
+}
+
+.delivery-time-order-modal-slot.expired.selected {
+    background-color: #ffcdd27c;
 }
 
 /* Кнопка подтверждения выбора */

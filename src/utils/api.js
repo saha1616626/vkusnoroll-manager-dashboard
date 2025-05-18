@@ -63,6 +63,11 @@ const apiMethods = {
     // Рабочее время ресторана
     getNextSevenDaysSchedule: () => api.get(`/deliveryWork/next-seven-days`), // Получить график работы на следующие 7 дней
 
+    // Заказы
+    createOrder: (data) => api.post('/orders/manager', data), // Создать заказ
+    updateOrder: (id, data) => api.put(`/orders/manager/${id}`, data), // Обновить заказ
+    getOrderById: (id) => api.get(`/orders/manager/${id}`), // Получить заказ по id
+
 };
 
 // Экспортируем объект по умолчанию

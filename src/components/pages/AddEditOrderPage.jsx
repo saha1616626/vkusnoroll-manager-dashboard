@@ -45,9 +45,11 @@ const AddEditOrderPage = ({ mode }) => {
         paymentMethod: '', // Тип оплаты
         changeAmount: '', // Подготовить сдачу с суммы
         deliveryCost: 0, // Стоимость доставки
+        deliveryAddressId: null,
         orderStatusId: 'null',
-        isPaymentStatus: '',
+        isPaymentStatus: false,
         address: { // Адрес
+            id: null,
             city: '',
             street: '',
             house: '',
@@ -57,13 +59,16 @@ const AddEditOrderPage = ({ mode }) => {
             apartment: '',
             comment: ''
         },
-        comment: ''
+        commentFromClient: '',
+        commentFromManager: '',
+        deliveryDate: '', // Дата доставки
+        deliveryTime: '', // Время доставки
+        orderItems: [] // Товары в заказе
     }
 
     const [isDirty, setIsDirty] = useState(false); // Изменения на странице, требующие сохранения
     const [formData, setFormData] = useState(formTemplate); // Основные данные формы
     const [initialData, setInitialData] = useState(formTemplate); // Исходные данные при загрузке страницы
-    const [orderItems, setOrderItems] = useState([]);  // Товары в заказе
 
     const [deliveryZones, setDeliveryZones] = useState([]); // Зоны доставки
     const [deliveryAddress, setDeliveryAddress] = useState(null); // Адрес доставки
@@ -77,8 +82,6 @@ const AddEditOrderPage = ({ mode }) => {
     const [deliverySchedule, setDeliverySchedule] = useState([]); // График работы доставки на ближайшие 7 дней
     const [currentServerTime, setCurrentServerTime] = useState(null); // Текущее время по МСК
     const [deliveryInterval, setDeliveryInterval] = useState(''); // Интервал для доставки заказа
-    const [deliveryDate, setDeliveryDate] = useState(''); // Дата доставки
-    const [deliveryTime, setDeliveryTime] = useState(''); // Время доставки
     const [orderSettings, setOrderSettings] = useState({ // Детали стоимости доставки
         defaultPrice: 0,
         isFreeDelivery: false,
@@ -113,7 +116,7 @@ const AddEditOrderPage = ({ mode }) => {
     */
 
     // Сумма товаров заказа заказа
-    const total = orderItems.reduce((sum, item) => sum + (item.pricePerUnit * item.quantityOrder || 0), 0);
+    const total = formData.orderItems.reduce((sum, item) => sum + (item.pricePerUnit * item.quantityOrder || 0), 0);
 
     /* 
     ===========================
@@ -151,7 +154,6 @@ const AddEditOrderPage = ({ mode }) => {
 
                 if (!coordinates || coordinates.some(c => isNaN(c)) || coordinates.length !== 2) {
                     setIsAddressValid(false);
-                    // setDeliveryCost(null);
                     return;
                 }
 
@@ -203,7 +205,7 @@ const AddEditOrderPage = ({ mode }) => {
 
         if (!orderSettings.freeThreshold && orderSettings.freeThreshold !== 0) return;
 
-        const subtotal = orderItems
+        const subtotal = formData.orderItems
             .reduce((sum, item) => sum + item.pricePerUnit * item.quantityOrder, 0);
 
         // Базовая стоимость берется из отдельного состояния
@@ -236,19 +238,133 @@ const AddEditOrderPage = ({ mode }) => {
             calculateFinalDeliveryCost();
         }
         else {
-            // Сброс стоимости доставки для ручного ввода
-            setFormData(prev => ({
-                ...prev,
-                deliveryCost: 0
-            }));
+            // В режиме редактирования сохраняем исходное значение из БД
+            if (mode === 'edit' && initialData.deliveryCost !== undefined) {
+                setFormData(prev => ({
+                    ...prev,
+                    deliveryCost: initialData.deliveryCost
+                }));
+            } else {
+                // Для нового заказа сбрасываем в 0
+                setFormData(prev => ({
+                    ...prev,
+                    deliveryCost: 0
+                }));
+            }
         }
-    }, [orderItems, baseDeliveryCost, isAutomaticModeCalculatingCostDelivery]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [formData.orderItems, baseDeliveryCost, isAutomaticModeCalculatingCostDelivery]); // eslint-disable-line react-hooks/exhaustive-deps
 
     /* 
     ===========================
      Эффекты
     ===========================
     */
+
+    // Загрузка данных в режиме редактировани
+    useEffect(() => {
+        if (mode === 'edit' && id) {
+            const loadOrderData = async () => {
+                try {
+                    const response = await api.getOrderById(id);
+                    const orderData = response.data;
+
+                    // Преобразование данных адреса
+                    const addressData = orderData.deliveryAddress || {};
+                    const transformedAddress = {
+                        id: addressData.id,
+                        city: addressData.city || '',
+                        street: addressData.street || '',
+                        house: addressData.house || '',
+                        apartment: addressData.apartment || '',
+                        entrance: addressData.entrance || '',
+                        floor: addressData.floor || '',
+                        comment: addressData.comment || '',
+                        isPrivateHome: addressData.isPrivateHome || false,
+                        latitude: addressData.latitude,
+                        longitude: addressData.longitude
+                    };
+
+                    // Преобразование данных статуса
+                    const statusId = orderData.orderStatusId || 'null';
+
+                    // Преобразование состава заказа
+                    const transformedItems = orderData.items.map(item => ({
+                        dishId: item.dishId,
+                        name: item.dishName,
+                        pricePerUnit: item.pricePerUnit,
+                        quantityOrder: item.quantityOrder,
+                        sum: item.pricePerUnit * item.quantityOrder,
+                        categoryId: item.dishCategory?.id || '',
+                        categoryName: item.dishCategory?.name || ''
+                    }));
+
+                    // Форматирование даты и времени
+                    let deliveryDate = '';
+                    let deliveryTime = '';
+                    if (orderData.startDesiredDeliveryTime && orderData.endDesiredDeliveryTime) {
+                        const startDate = new Date(orderData.startDesiredDeliveryTime);
+                        const endDate = new Date(orderData.endDesiredDeliveryTime);
+                        deliveryDate = startDate.toISOString().split('T')[0];
+                        deliveryTime = `${formatTime(startDate)} — ${formatTime(endDate)}`;
+                    }
+
+                    // Собираем полный объект данных
+                    const updatedFormData = {
+                        ...formTemplate,
+                        name: orderData.nameClient || '',
+                        numberPhone: orderData.numberPhoneClient || '',
+                        paymentMethod: orderData.paymentMethod,
+                        deliveryAddressId: orderData.deliveryAddressId,
+                        orderStatusId: statusId,
+                        isPaymentStatus: orderData.isPaymentStatus,
+                        changeAmount: orderData.prepareChangeMoney || '',
+                        deliveryCost: orderData.shippingCost,
+                        commentFromManager: orderData.commentFromManager || '',
+                        address: transformedAddress,
+                        orderItems: transformedItems,
+                        deliveryDate,
+                        deliveryTime
+                    };
+
+                    // Устанавливаем данные формы и начальные данные
+                    setFormData(updatedFormData);
+                    setInitialData(updatedFormData);
+
+                    setIsAutomaticModeCalculatingCostDelivery(false); // Расчет стоимости доставки в ручном режиме
+
+                    // Если есть значение в поле «Подготовить сдачу с», то открываем меню.
+                    if (orderData.paymentMethod === 'Наличные' && orderData.prepareChangeMoney) {
+                        setIsCashExpanded(true);
+                    }
+
+                    // Установка адреса доставки
+                    setDeliveryAddress({
+                        ...transformedAddress,
+                        latitude: addressData.latitude,
+                        longitude: addressData.longitude
+                    });
+
+                    // TODO
+                    // Адрес с ошибкой открывается
+                    // Дата и время доставки при открытие не отображается как выбраная (устаревшая тоже отображается)
+                    // Стоимость доставки должна отображаться в ручном режиме, чтобы автоматически не изменилась
+
+                } catch (error) {
+                    console.error('Ошибка загрузки заказа:', error);
+                    setErrorMessages(['Не удалось загрузить данные заказа']);
+                    setShowErrorMessageModal(true);
+                    navigate('/orders');
+                }
+            };
+
+            loadOrderData();
+        }
+    }, [mode, id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Форматирование времени
+    const formatTime = (date) => {
+        return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    };
 
     // Получаем и устанавливаем расписание работы доставки
     useEffect(() => {
@@ -258,10 +374,13 @@ const AddEditOrderPage = ({ mode }) => {
                 setDeliverySchedule(response.data);
 
                 // Автовыбор первой доступной даты
-                const firstWorkingDay = response.data.find(d => d.isWorking);
-                if (firstWorkingDay) {
-                    setDeliveryDate(firstWorkingDay.date);
-                }
+                // const firstWorkingDay = response.data.find(d => d.isWorking);
+                // if (firstWorkingDay) {
+                //     setFormData(prev => ({
+                //         ...prev,
+                //         deliveryDate: firstWorkingDay.date
+                //     }));
+                // }
             } catch (error) {
                 console.error('Ошибка загрузки расписания:', error);
                 if (window.history.length > 1) { // В случае ошибки происходит маршрутизация на предыдущую страницу или в меню
@@ -334,16 +453,16 @@ const AddEditOrderPage = ({ mode }) => {
         loadDeliverySchedule();
     }, []);
 
-    // Установка статуса заказа по умолчанию
+    // Установка статуса заказа по умолчанию ТОЛЬКО В РЕЖИМЕ ДОБАВЛЕНИЯ
     useEffect(() => {
-        if (orderStatuses.length > 0) {
+        if (orderStatuses.length > 0 && mode === 'add') {
             const defaultStatus = orderStatuses.find(s => s.name === 'Новый');
             setFormData(prev => ({
                 ...prev,
                 orderStatusId: defaultStatus?.id || ''
             }));
         }
-    }, [orderStatuses]);
+    }, [orderStatuses]);  // eslint-disable-line react-hooks/exhaustive-deps
 
     // Эффект для синхронизации стоимости доставки в поле для ручного ввода
     useEffect(() => {
@@ -471,13 +590,13 @@ const AddEditOrderPage = ({ mode }) => {
 
     // Изменение данных в таблице с составом заказа
     const handleOrderItemsChange = (newData) => {
-        setOrderItems(newData);
+        setFormData(prev => ({ ...prev, orderItems: newData }));
     };
 
     // Обработчик сохранения данных из модального окна OrderAddItemsModal
     const handleSaveItems = (selectedItems) => {
-        setOrderItems(prev => {
-            const updatedItems = [...prev];
+        setFormData(prev => {
+            const updatedItems = [...prev.orderItems];
 
             selectedItems.forEach(newItem => {
                 const existingIndex = updatedItems.findIndex(
@@ -506,11 +625,12 @@ const AddEditOrderPage = ({ mode }) => {
             });
 
             // Удаляем товары с нулевым количеством
-            return updatedItems.filter(item =>
-                selectedItems.some(si =>
-                    si.dishId === item.dishId && item.quantityOrder > 0
+            return {
+                ...prev,
+                orderItems: updatedItems.filter(item =>
+                    selectedItems.some(si => si.dishId === item.dishId && item.quantityOrder > 0)
                 )
-            );
+            };
         });
         setShowAddModal(false);
     };
@@ -523,10 +643,10 @@ const AddEditOrderPage = ({ mode }) => {
     // Удаление строк в таблице
     const handleDeleteSelected = () => {
         // Удаление по индексам в обратном порядке
-        const newItems = [...orderItems].filter(
+        const newItems = formData.orderItems.filter(
             (_, index) => !selectedRows.includes(index)
         );
-        setOrderItems(newItems);
+        setFormData(prev => ({ ...prev, orderItems: newItems }));
         setSelectedRows([]);
     };
 
@@ -582,7 +702,7 @@ const AddEditOrderPage = ({ mode }) => {
         if (!formData.name.trim()) errors.push('Имя');
         if (formData.numberPhone.replace(/\D/g, '').length !== 11) errors.push('Номер телефона');
         if (!deliveryAddress || !formData.address) errors.push('Адрес доставки');
-        if (!deliveryDate || !deliveryTime) errors.push('Дата и время доставки');
+        if (!formData.deliveryDate || !formData.deliveryTime) errors.push('Дата и время доставки');
         if (!formData.paymentMethod) errors.push('Способ оплаты');
 
         return errors;
@@ -600,14 +720,14 @@ const AddEditOrderPage = ({ mode }) => {
         }
 
         // Валидация наличия товаров
-        if (!orderItems || orderItems.length < 1) {
+        if (!formData.orderItems || formData.orderItems.length < 1) {
             setErrorMessages(['Для сохранения необходимо выбрать минимум один товар']);
             setShowErrorMessageModal(true);
             return;
         }
 
         // Валидация товаров с нулевым количеством
-        const hasZeroQuantity = orderItems.some(item => item.quantityOrder === 0);
+        const hasZeroQuantity = formData.orderItems.some(item => item.quantityOrder === 0);
         if (hasZeroQuantity) {
             setErrorMessages(['Количество товара не может быть равно нулю']);
             setShowErrorMessageModal(true);
@@ -621,7 +741,88 @@ const AddEditOrderPage = ({ mode }) => {
             return;
         }
 
+        // Форматирование времени доставки
+        const formatDateTime = (dateString, timeString) => {
+            const [year, month, day] = dateString.split('-').map(Number);
+            const date = new Date(year, month - 1, day);
+            const [start, end] = timeString.split(/[—-]/).map(t => t.trim());
 
+            const formatTime = (time) => {
+                const [hours, minutes] = time.split(':').map(Number);
+                return `${String(hours).padStart(2, '0')}:${String(minutes || '00').padStart(2, '0')}`;
+            };
+
+            const isoDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+            return {
+                start: `${isoDate} ${formatTime(start)}`,
+                end: `${isoDate} ${formatTime(end)}`
+            };
+        };
+
+        const { start, end } = formatDateTime(formData.deliveryDate, formData.deliveryTime);
+
+        // Формируем объект заказа
+        const orderData = {
+            nameClient: formData.name.trim(),
+            numberPhoneClient: formData.numberPhone.replace(/\D/g, ''),
+            orderStatusId: formData.orderStatusId,
+            address: {
+                city: deliveryAddress.city,
+                street: deliveryAddress.street,
+                house: deliveryAddress.house,
+                apartment: deliveryAddress.apartment || null,
+                entrance: deliveryAddress.entrance || null,
+                floor: deliveryAddress.floor || null,
+                comment: deliveryAddress.comment || null,
+                isPrivateHome: deliveryAddress.isPrivateHome,
+                coordinates: [
+                    parseFloat(deliveryAddress.latitude),
+                    parseFloat(deliveryAddress.longitude)
+                ]
+            },
+            items: formData.orderItems.map(item => ({
+                dishId: item.dishId,
+                quantityOrder: item.quantityOrder,
+                pricePerUnit: item.pricePerUnit
+            })),
+            shippingCost: formData.deliveryCost,
+            goodsCost: total,
+            paymentMethod: formData.paymentMethod,
+            isPaymentStatus: formData.isPaymentStatus,
+            prepareChangeMoney: formData.paymentMethod === 'Наличные' && formData.changeAmount
+                ? Number(formData.changeAmount)
+                : null,
+            startDesiredDeliveryTime: start,
+            endDesiredDeliveryTime: end,
+            commentFromManager: formData.commentFromManager || ''
+        };
+
+        if (mode === 'add') {
+            try {
+                const response = await api.createOrder(orderData);
+                if (response.data.success) {
+                    navigate('/orders');
+                }
+            } catch (error) {
+                console.error('Ошибка создания заказа:', error);
+                setErrorMessages([error.response?.data?.error || 'Ошибка создания заказа']);
+                setShowErrorMessageModal(true);
+            }
+        }
+
+        if (mode === 'edit') {
+            try {
+                const response = await api.updateOrder(id, orderData);
+                if (response.data.success) {
+                    navigate('/orders');
+                }
+            } catch (error) {
+                console.error('Ошибка обновления заказа:', error);
+                setErrorMessages([error.response?.data?.error || 'Ошибка обновления заказа']);
+                setShowErrorMessageModal(true);
+            }
+        }
 
     }
 
@@ -651,7 +852,7 @@ const AddEditOrderPage = ({ mode }) => {
                 <div className="add-edit-order-main-section">
 
                     {/* Группа блоков получатель + статусы */}
-                    <div className={`add-edit-order-top-group ${formData.comment ? 'add-edit-order-top-group--order-client-comment' : ''}`}>
+                    <div className={`add-edit-order-top-group ${formData.commentFromClient ? 'add-edit-order-top-group--order-client-comment' : ''}`}>
                         {/* Блок получателя */}
                         <section className="add-edit-order-section">
                             <h2 className="add-edit-order-subtitle">Данные получателя</h2>
@@ -674,7 +875,7 @@ const AddEditOrderPage = ({ mode }) => {
                                         <IMaskInput
                                             mask="+7(000)000-00-00"
                                             value={formData.numberPhone}
-                                            onAccept={(value) => setFormData({ ...formData, numberPhone: value })}
+                                            onAccept={(value) => setFormData({ ...formData, numberPhone: value.replace(/\D/g, '') })}
                                             className={`add-edit-order-input add-edit-order-input-recipients-details`}
                                             placeholder="+7(___) ___-__-__"
                                         />
@@ -686,7 +887,7 @@ const AddEditOrderPage = ({ mode }) => {
                                         <label>Комментарий клиента</label>
                                         <textarea className="add-edit-order-textarea"
                                             style={{ height: '100%' }}
-                                            value={formData?.comment || '...'} disabled />
+                                            value={formData?.commentFromClient || '...'} disabled />
                                     </div>
                                 </div>
                             </div>
@@ -837,8 +1038,8 @@ const AddEditOrderPage = ({ mode }) => {
                                                 onClick={() => setIsDeliveryTimeModalOpen(true)}
                                             >
                                                 <img src={calendarIcon} alt="Календарь" width={20} />
-                                                {deliveryDate && deliveryTime
-                                                    ? `${new Date(deliveryDate).toLocaleDateString('ru-RU')} ${deliveryTime}`
+                                                {formData.deliveryDate && formData.deliveryTime
+                                                    ? `${new Date(formData.deliveryDate).toLocaleDateString('ru-RU')} ${formData.deliveryTime}`
                                                     : "Выбрать дату и время"}
                                             </button>
                                         </div>
@@ -976,7 +1177,7 @@ const AddEditOrderPage = ({ mode }) => {
                         {/* Таблица */}
                         <div className="add-edit-order-products-table">
                             <OrderCompositionTable
-                                data={orderItems}
+                                data={formData.orderItems}
                                 onSelectionChange={handleSelectionChange}
                                 selectedRows={selectedRows}
                                 onDataChange={handleOrderItemsChange}
@@ -992,6 +1193,8 @@ const AddEditOrderPage = ({ mode }) => {
                             <textarea
                                 maxLength={1000}
                                 style={{ height: '5rem' }}
+                                value={formData.commentFromManager}
+                                onChange={(e) => setFormData({ ...formData, commentFromManager: e.target.value })}
                                 className="add-edit-order-textarea" />
                         </div>
                     </section>
@@ -1056,17 +1259,22 @@ const AddEditOrderPage = ({ mode }) => {
                 currentServerTime={currentServerTime}
                 deliveryInterval={deliveryInterval}
                 onSelect={(date, time) => {
-                    setDeliveryDate(date);
-                    setDeliveryTime(time);
+                    setFormData(prev => ({
+                        ...prev,
+                        deliveryDate: date,
+                        deliveryTime: time
+                    }));
                 }}
                 refreshKey={refreshKey}
+                selectedDate={initialData.deliveryDate}
+                selectedTime={initialData.deliveryTime}
             />
 
             {/* Модальное окно для добавления товаров в заказ */}
             <OrderAddItemsModal
                 isOpen={showAddModal}
                 onSave={handleSaveItems}
-                existingItems={orderItems}
+                existingItems={formData.orderItems}
                 onCancel={() => setShowAddModal(false)}
             />
 

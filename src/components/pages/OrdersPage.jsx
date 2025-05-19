@@ -210,6 +210,7 @@ const OrdersPage = () => {
             'Статус оплаты': order.isPaymentStatus ? 'Оплачен' : 'Не оплачен',
             'Способ оплаты': order.paymentMethod || '—',
             'Адрес доставки': formatAddress(order.deliveryAddress),
+            'Пользователь': order.accountId || '—',
             'Комментарий клиента': order.commentFromClient || '—',
             'Комментарий менеджера': order.commentFromManager || '—',
             'Имя клиента': order.nameClient || '—',
@@ -217,7 +218,7 @@ const OrdersPage = () => {
         };
     });
 
-    // Обновление данные на странице (Иконка). Без сброса страницы списка пагинации
+    // Обновление данных на странице (иконка). Без сброса списка пагинации
     const refreshData = async () => {
         // Обновляем активные фильтры
         setActiveFilters(prev => {
@@ -356,6 +357,8 @@ const OrdersPage = () => {
 
         const orderStatus = statusId === 'all' ? [] : [{ id: statusId, name: statusName }];
 
+        searchInputRef.current?.clear(); // Очистка поля поиска
+
         // Обновляем активные фильтры
         setActiveFilters(prev => {
             const newFilters = {
@@ -367,7 +370,8 @@ const OrdersPage = () => {
                     start: filterState.formData.date?.start,
                     end: filterState.formData.date?.end
                 },
-                sort: filterState.formData.sort
+                sort: filterState.formData.sort,
+                search: ''
             };
 
             // Сохраняем новые фильтры в filterState
@@ -498,7 +502,7 @@ const OrdersPage = () => {
                 search: term.trim()
             };
 
-            // Создаем копию newFilters БЕЗ поля search для filterState
+            // Создаем копию newFilters с полем search для filterState
             const { search, ...formDataWithoutSearch } = newFilters;
 
             // Сохраняем новые фильтры в filterState (без search)
@@ -699,13 +703,13 @@ const OrdersPage = () => {
                     onSelectionChange={handleSelectionChange}
                     onRowClick={handleRowClick}
                     tableId={pageId}
-                    centeredColumns={['Номер', 'Дата и время оформления']}  // Cписок центрируемых колонок
+                    centeredColumns={['Номер', 'Дата и время оформления', 'Пользователь']}  // Cписок центрируемых колонок
                 />}
             </div>
 
             {/* Панель для управления пагинацией */}
             <div>
-                {!isLoading && (
+                {!isLoading &&  (
                     <PaginationBar
                         totalItems={totalOrders}
                         currentPage={currentPage}

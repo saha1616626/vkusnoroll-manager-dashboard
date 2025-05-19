@@ -21,6 +21,7 @@ import deleteIcon from './../../assets/icons/delete.png'
 import moreIcon from './../../assets/icons/moreVertical.png';
 import calendarIcon from './../../assets/icons/calendar.png'; // Календарь
 import exchangeIcon from './../../assets/icons/exchange.png';
+import copyIcon from './../../assets/icons/copy.png';
 
 // Импорт стилей
 import './../../styles/pages/addEditOrderPage.css'
@@ -63,7 +64,8 @@ const AddEditOrderPage = ({ mode }) => {
         commentFromManager: '',
         deliveryDate: '', // Дата доставки
         deliveryTime: '', // Время доставки
-        orderItems: [] // Товары в заказе
+        orderItems: [], // Товары в заказе
+        userEmail: '' // Email пользователя
     }
 
     const [isDirty, setIsDirty] = useState(false); // Изменения на странице, требующие сохранения
@@ -323,10 +325,12 @@ const AddEditOrderPage = ({ mode }) => {
                         changeAmount: orderData.prepareChangeMoney || '',
                         deliveryCost: orderData.shippingCost,
                         commentFromManager: orderData.commentFromManager || '',
+                        commentFromClient: orderData.commentFromClient || '',
                         address: transformedAddress,
                         orderItems: transformedItems,
                         deliveryDate,
-                        deliveryTime
+                        deliveryTime,
+                        userEmail: orderData.userEmail || ''
                     };
 
                     // Устанавливаем данные формы и начальные данные
@@ -943,9 +947,31 @@ const AddEditOrderPage = ({ mode }) => {
                                             placeholder="+7(___) ___-__-__"
                                         />
                                     </div>
+
+                                    <div className="add-edit-order-input-group" style={{ display: (formData?.userEmail === '') || (mode === 'add') ? 'none' : '' }}>
+                                        <label>Email</label>
+                                        <div style={{ display: 'flex' }}>
+                                            <input
+                                                type="text"
+                                                placeholder=""
+                                                maxLength={60}
+                                                className={`add-edit-order-input add-edit-order-input-recipients-details`}
+                                                value={formData.userEmail}
+                                                onChange={(e) => setFormData({ ...formData, userEmail: e.target.value })}
+                                                disabled={true}
+                                            />
+                                            <button
+                                                title='Скопировать Email'
+                                                className="add-edit-order-input-copy-button"
+                                                onClick={() => navigator.clipboard.writeText(formData.userEmail)}
+                                                aria-label="Копировать">
+                                                <img src={copyIcon} alt="Copy" />
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="add-edit-order-form-group">
+                                <div className="add-edit-order-form-group" style={{ display: mode === 'add' ? 'none' : '' }}>
                                     <div className="add-edit-order-input-group">
                                         <label>Комментарий клиента</label>
                                         <textarea className="add-edit-order-textarea"

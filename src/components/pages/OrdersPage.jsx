@@ -210,7 +210,6 @@ const OrdersPage = () => {
             'Статус оплаты': order.isPaymentStatus ? 'Оплачен' : 'Не оплачен',
             'Способ оплаты': order.paymentMethod || '—',
             'Адрес доставки': formatAddress(order.deliveryAddress),
-            'Пользователь': order.accountId || '—',
             'Комментарий клиента': order.commentFromClient || '—',
             'Комментарий менеджера': order.commentFromManager || '—',
             'Имя клиента': order.nameClient || '—',

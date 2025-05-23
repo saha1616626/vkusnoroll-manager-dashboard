@@ -28,7 +28,11 @@ api.interceptors.response.use(
             // Токен, роль, id и имя удаляется из локального хранилища
             ['authManagerToken', 'userRole', 'userId', 'userName']
                 .forEach(key => localStorage.removeItem(key));
-            window.location.href = '/login'; // Переход на страницу авторизации
+                
+            // Редирект только если не на целевой странице
+            if (window.location.pathname !== '/login') {
+                window.location.href = '/login'; // Переход на страницу авторизации
+            }
         }
         return Promise.reject(error); // Возвращает ошибку для дальнейшей обработки в компонентах
     }
@@ -44,8 +48,7 @@ const apiMethods = {
     getAccountById: (id) => api.get(`/accounts/user/${id}`), // Пользователь
 
     // Заказы
-    getOrders: (params) =>
-        api.get('/orders/manager/all', { params }), // Получение всех заказов с пагинацией
+    getOrders: (params) => api.get('/orders/manager/all', { params }), // Получение всех заказов с пагинацией
 
     // Статусы заказов
     getOrderStatuses: () => api.get('/orderStatuses'),
@@ -70,7 +73,7 @@ const apiMethods = {
     changeOrderStatuses: (orderIds, newStatusId) => api.put('/orders/manager/change-status', { orderIds, newStatusId }), // Изменить статус заказов
     changeOrderPaymentStatuses: (orderIds, isPaymentStatus) => api.put('/orders/manager/change-payment-statuses', { orderIds, isPaymentStatus }), // Изменить статус оплаты заказов
     deleteOrders: (orderIds) => api.delete('/orders/manager', { data: { orderIds } }), // Удаление заказов
-    
+
 };
 
 // Экспортируем объект по умолчанию

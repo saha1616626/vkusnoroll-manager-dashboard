@@ -77,6 +77,25 @@
     position: relative;
 }
 
+/* Скрытие браузерных кнопок показа пароля */
+.login-password-wrapper input[type="password"]::-webkit-credentials-auto-fill-button,
+.login-password-wrapper input[type="password"]::-webkit-contacts-auto-fill-button,
+.login-password-wrapper input[type="password"]::-ms-reveal,
+.login-password-wrapper input[type="password"]::-moz-reveal-password {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.login-password-wrapper input[type="password"]::-ms-reveal {
+    display: none;
+}
+
 /* Кнопка скрыть пароль */
 .login-toggle-password {
     position: absolute;

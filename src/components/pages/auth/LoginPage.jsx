@@ -31,7 +31,7 @@ const LoginPage = () => {
     const [login, setLogin] = useState(''); // Логин
     const [password, setPassword] = useState(''); // Пароль
     const [error, setError] = useState(''); // Ошибки
-    const [showPassword, setShowPassword] = useState(false); // Отображение пароля
+    const [showPassword, setShowPassword] = useState(true); // Отображение пароля
 
     /* 
     ===========================
@@ -40,12 +40,12 @@ const LoginPage = () => {
     */
 
     // Авто перенаправление авторизованного пользвоателя в меню
-    useEffect(() => {
-        const token = localStorage.getItem('authManagerToken');
-        if (isTokenValid(token)) {
-            navigate('/');
-        }
-    }, [navigate]);
+    // useEffect(() => {
+    //     const token = localStorage.getItem('authManagerToken');
+    //     if (isTokenValid(token)) {
+    //         navigate('/');
+    //     }
+    // }, [navigate]);
 
     /* 
     ===========================
@@ -58,15 +58,18 @@ const LoginPage = () => {
         e.preventDefault(); // Отменяет действие события по умолчанию
         try {
             const response = await api.login({ login, password });
-            // Сохраняем токен из куки (сервер уже установил его)
-            const token = response.data.token;
-            localStorage.setItem('authManagerToken', token);
-            localStorage.setItem('userRole', response.data.role); // Сохраняем роль, которую вернул сервер
-            localStorage.setItem('userId', response.data.userId);
-            localStorage.setItem('userName', response.data.userName); //  Сохраняем имя, которое вернул сервер
 
-            updateAuth(true); // Обновляем статус авторизации
-            navigate('/');
+            if (response.data.token && response.data.role && response.data.userName) {
+                // Сохраняем токен из куки (сервер уже установил его)
+                const token = response.data.token;
+                localStorage.setItem('authManagerToken', token);
+                localStorage.setItem('userRole', response.data.role); // Сохраняем роль, которую вернул сервер
+                localStorage.setItem('userId', response.data.userId);
+                localStorage.setItem('userName', response.data.userName); //  Сохраняем имя, которое вернул сервер
+
+                updateAuth(true); // Обновляем статус авторизации
+                navigate('/');
+            }
         } catch (err) {
             setError(err.response.data.error); // Вывод ошибки
         }
@@ -102,7 +105,7 @@ const LoginPage = () => {
                         <div className="login-password-wrapper">
                             <input
                                 id="password"
-                                type={showPassword ? 'text' : 'password'}
+                                type={!showPassword ? 'text' : 'password'}
                                 maxLength={100}
                                 placeholder="Пароль"
                                 value={password}
@@ -112,9 +115,9 @@ const LoginPage = () => {
                             <button
                                 type="button"
                                 className="login-toggle-password"
-                                onMouseDown={() => setShowPassword(true)}
-                                onMouseUp={() => setShowPassword(false)}
-                                onBlur={() => setShowPassword(false)}
+                                onMouseDown={() => setShowPassword(false)}
+                                onMouseUp={() => setShowPassword(true)}
+                                onBlur={() => setShowPassword(true)}
                             >
                                 <img src={showPassword ? hiddenEyeIcon : eyeIcon} alt="Eye" className="icon-button" />
                             </button>

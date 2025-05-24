@@ -135,12 +135,55 @@
     opacity: 0.7;
 }
 
-/* Сообщение об ошибке */
-.login-error-message {
-    background: #ffe3e3;
-    color: #d32f2f;
-    padding: 15px;
-    border-radius: 8px;
-    margin: 20px 0;
-    border: 1px solid #ffbaba;
+/* Сообщения */
+.login-page-form-message {
+    opacity: 1;
+    visibility: visible;
+
+    /* Анимация */
+    transition:
+        opacity 0.3s ease-in-out,
+        visibility 0.3s ease-in-out;
+}
+
+.login-page-form-message.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.login-page-form-message {
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    text-align: center;
+    border: 1px solid;
+
+    /* Анимация */
+    height: auto;
+    overflow: hidden;
+    transition:
+        height 0.3s ease-in-out,
+        padding 0.3s ease-in-out,
+        margin 0.3s ease-in-out;
+}
+
+.login-page-form-message:empty {
+    height: 0;
+    padding: 0;
+    margin: 0;
+    border: 0;
+}
+
+/* Ошибка */
+.login-page-form-message.error {
+    color: #e74c3c;
+    background: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+/* Успех */
+.login-page-form-message.success {
+    color: #505050;
+    background: #d4edda;
+    border-color: #c3e6cb;
 }

@@ -30,7 +30,10 @@ const LoginPage = () => {
 
     const [login, setLogin] = useState(''); // Логин
     const [password, setPassword] = useState(''); // Пароль
-    const [error, setError] = useState(''); // Ошибки
+    const [message, setMessage] = useState({
+        text: '',
+        type: 'error' // 'error' | 'success' 
+    }); // Сообщения
     const [showPassword, setShowPassword] = useState(true); // Отображение пароля
 
     /* 
@@ -39,13 +42,21 @@ const LoginPage = () => {
     ===========================
     */
 
-    // Авто перенаправление авторизованного пользвоателя в меню
-    // useEffect(() => {
-    //     const token = localStorage.getItem('authManagerToken');
-    //     if (isTokenValid(token)) {
-    //         navigate('/');
-    //     }
-    // }, [navigate]);
+    // Скрыть сообщение через несколько секунд
+    useEffect(() => {
+        if (message.text) {
+            const timer = setTimeout(() => {
+                setMessage(prev => ({ ...prev, fading: true }));
+
+                // Удаляем сообщение после завершения анимации
+                setTimeout(() => {
+                    setMessage({ text: '', type: 'error', fading: false });
+                }, 300); // Должно совпадать с временем анимации
+            }, 3000); // Общее время показа сообщения
+
+            return () => clearTimeout(timer);
+        }
+    }, [message.text]);
 
     /* 
     ===========================
@@ -71,7 +82,10 @@ const LoginPage = () => {
                 navigate('/');
             }
         } catch (err) {
-            setError(err.response.data.error); // Вывод ошибки
+            setMessage({ // Вывод ошибки
+                text: err.response.data.error,
+                type: 'error'
+            });
         }
     };
 
@@ -87,7 +101,17 @@ const LoginPage = () => {
             <div className="login-form-container">
                 <form onSubmit={handleSubmit} className="login-form">
                     <h2>Вход</h2>
-                    {error && <div className="login-error-message">{error}</div>}
+
+                    {message.text && (
+                        <div className={`
+                            login-page-form-message 
+                            ${message.type} 
+                            ${message.fading ? 'fade-out' : ''}
+                        `}>
+                            {message.text}
+                        </div>
+                    )}
+
                     <div className="login-input-group">
                         <label htmlFor="login">Логин</label>
                         <input

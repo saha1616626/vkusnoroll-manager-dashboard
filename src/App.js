@@ -27,6 +27,7 @@ import PersonalAccount from './components/pages/PersonalAccount'; // Стран�
 import api from './utils/api'; // API сервера
 import AccessDeniedPage from './components/pages/AccessDeniedPage'; // Страница для редиректа при ошибке доступа
 import AddEditOrderPage from './components/pages/AddEditOrderPage'; // Страница для управления заказами
+import PasswordRecoveryPage from './components/pages/auth/PasswordRecoveryPage'; // Страница восстановления пароля
 
 // Импорт стилей
 import './styles/global/global.css'; // Глобальные стили
@@ -94,10 +95,20 @@ const AppContent = () => {
     <>
       <Routes>
         {/* Автоматическая навигация в приватный контент в случае успешной авторизации */}
-        <Route index element={<Navigate to="/orders" replace />} />
+        <Route
+          path="/login"
+          element={
+            isAuthenticated ? (
+              // Cтраница авторизации 
+              <Navigate to="/orders" replace />
+            ) : (
+              <LoginPage />
+            )
+          }
+        />
 
-        {/* Cтраница авторизации */}
-        <Route path="/login" element={<LoginPage />} />
+        {/* Страница восстановления пароля */}
+        <Route path='/forgot-password' element={isAuthenticated ? <Navigate to="/orders" replace /> : <PasswordRecoveryPage />}/>
         {/* Защищённые маршруты (Доступные после авторизации) */}
         <Route element={<PrivateRoute />}>
           <Route path="/" element={<HeaderLayout />}>
@@ -131,7 +142,7 @@ const AppContent = () => {
                 ? <MessageCenterPage />
                 : <Navigate to="/access-denied/messages" replace />
             } />
-            
+
             <Route path='/personal-account' element={<PersonalAccount />} />
           </Route>
         </Route>

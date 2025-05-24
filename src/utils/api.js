@@ -28,7 +28,7 @@ api.interceptors.response.use(
             // Токен, роль, id и имя удаляется из локального хранилища
             ['authManagerToken', 'userRole', 'userId', 'userName']
                 .forEach(key => localStorage.removeItem(key));
-                
+
             // Редирект только если не на целевой странице
             if (window.location.pathname !== '/login') {
                 window.location.href = '/login'; // Переход на страницу авторизации
@@ -46,6 +46,12 @@ const apiMethods = {
 
     // Учетные записи
     getAccountById: (id) => api.get(`/accounts/user/${id}`), // Пользователь
+    sendCodeManagerRecoveryPassword: (email) =>
+        api.post(`/accounts/manager/send-code-recovery`, { email: email.toString() }), // Отправка кода подтверждения для восстановления пароля к учетной записи
+    checkingCodeResettingPassword: (id, code) =>
+        api.post(`/accounts/user/${id}/verify-code`, { code: code.toString() }), // Проверка кода подтверждения, отправленного на email при восстановлении пароля
+    changingPassword: (id, password) =>
+        api.put(`/accounts/user/${id}/changing-password`, { password: password }), // Смена пароля
 
     // Заказы
     getOrders: (params) => api.get('/orders/manager/all', { params }), // Получение всех заказов с пагинацией

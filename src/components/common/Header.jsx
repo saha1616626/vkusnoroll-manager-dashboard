@@ -249,7 +249,9 @@ const Header = () => {
                         onClick={() => handleNavigation('/message-center', 1)}
                         style={{
                             backgroundColor: selectedButton === 1 ? 'gray' : 'transparent',
-                            color: selectedButton === 1 ? 'white' : 'black'
+                            color: selectedButton === 1 ? 'white' : 'black',
+                            // TODO — центр сообщений скрыт в рамках дипломной работы
+                            display: 'none'
                         }}
                     >
                         Центр сообщений

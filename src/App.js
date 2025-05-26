@@ -108,10 +108,12 @@ const AppContent = () => {
         />
 
         {/* Страница восстановления пароля */}
-        <Route path='/forgot-password' element={isAuthenticated ? <Navigate to="/orders" replace /> : <PasswordRecoveryPage />}/>
+        <Route path='/forgot-password' element={isAuthenticated ? <Navigate to="/orders" replace /> : <PasswordRecoveryPage />} />
         {/* Защищённые маршруты (Доступные после авторизации) */}
         <Route element={<PrivateRoute />}>
           <Route path="/" element={<HeaderLayout />}>
+            {/* Индексный маршрут для корневого пути */}
+            <Route index element={<Navigate to="/orders" replace />} />
 
             <Route path="/access-denied/orders" element={
               <AccessDeniedPage message="Доступ к управлению заказами временно ограничен администратором" />
